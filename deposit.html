@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Boom Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="margin-top:50px; padding:20px;">
+        <h1 style="color:gold;">BOOM EARNINGS</h1>
+        <h3>Create New Account</h3>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="pass" placeholder="Password (6+ digits)">
+        <button onclick="handleSignup()" style="background:gold; color:black; font-weight:bold; width:100%; padding:15px; border-radius:10px;">SIGN UP</button>
+        <p>Aapka account hai? <a href="login.html" style="color:gold;">Login Karein</a></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            storageBucket: "boom-earnings.firebasestorage.app",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        window.handleSignup = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('pass').value;
+            if(p.length < 6) return alert("Password kam se kam 6 huroof ka ho!");
+
+            createUserWithEmailAndPassword(auth, e, p).then(async (userCredential) => {
+                await set(ref(db, 'users/' + userCredential.user.uid), {
+                    balance: 30,
+                    kyc: "not_verified",
+                    email: e
+                });
+                alert("Mubarak ho! RS 30 Welcome Bonus mil gaya.");
+                location.href = 'index.html';
+            }).catch(err => alert("Error: " + err.message));
+        };
+    </script>
+</body>
+</html>
