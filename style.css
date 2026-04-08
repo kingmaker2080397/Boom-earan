@@ -1,0 +1,13 @@
+body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 10px; text-align: center; }
+.header { display: flex; justify-content: space-between; background: #1a1a1a; padding: 15px; border-radius: 10px; border: 1px solid gold; }
+.balance-box { color: #00ff00; font-weight: bold; font-size: 1.2rem; }
+.menu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 15px 0; }
+.menu-grid button { background: #222; color: gold; border: 1px solid #444; padding: 10px 2px; font-size: 11px; border-radius: 5px; }
+.table { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; background: #064506; padding: 20px; border-radius: 20px; border: 3px solid #5d3a1a; }
+.card { background: #fff; color: #000; font-size: 2rem; height: 80px; width: 60px; line-height: 80px; margin: 10px auto; border-radius: 5px; }
+.btn-t { background: #ff4444; color: #fff; padding: 15px; width: 45%; border: none; font-weight: bold; border-radius: 5px; }
+.btn-d { background: #4444ff; color: #fff; padding: 15px; width: 45%; border: none; font-weight: bold; border-radius: 5px; }
+input { width: 80%; padding: 10px; background: #1a1a1a; border: 1px solid gold; color: #fff; margin-bottom: 10px; border-radius: 5px; }
+#payout-toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #111; color: gold; padding: 10px; border-radius: 20px; border: 1px solid gold; width: 85%; transition: 0.5s; z-index: 1000; }
+.lb-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #222; font-size: 13px; }
+       
