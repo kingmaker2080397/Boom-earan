@@ -2,60 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Earnings - Professional</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boom Earnings - Tiger vs Dragon</title>
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/48/rocket.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        :root { --gold: #ffd700; --dark-bg: #000; --card-bg: #111; --text: #fff; --tiger-red: #d32f2f; --dragon-blue: #1976d2; }
+        body { margin: 0; padding: 0; background-color: var(--dark-bg); color: var(--text); font-family: 'Poppins', sans-serif; overflow-x: hidden; }
+        
+        /* Header & Balance */
+        .app-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: rgba(0,0,0,0.8); border-bottom: 1px solid #222; position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 20px; font-weight: 700; color: var(--gold); display: flex; align-items: center; gap: 5px; }
+        .balance-box { display: flex; align-items: center; gap: 8px; background: rgba(255, 215, 0, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid var(--gold); }
+        .balance-box img { width: 18px; }
+        .balance-box span { font-weight: 600; color: var(--gold); }
+
+        /* User Info & Quick Links */
+        .user-panel { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; font-size: 13px; color: #aaa; background: #050505; }
+        .quick-links { display: flex; gap: 10px; }
+        .quick-links a { text-decoration: none; color: #aaa; background: #111; padding: 3px 8px; border-radius: 5px; border: 1px solid #222; }
+
+        /* Game Area */
+        .game-main { padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        
+        /* Timer */
+        .timer-container { font-size: 14px; text-align: center; color: #888; display: flex; align-items: center; gap: 8px; }
+        #timer-sec { font-size: 24px; font-weight: 700; color: var(--gold); min-width: 35px; }
+
+        /* Game Battlefield (Visuals) */
+        .battlefield { width: 100%; display: flex; justify-content: space-around; align-items: center; gap: 10px; margin: 10px 0; }
+        .fighter { text-align: center; flex: 1; position: relative; }
+        .fighter img.character { width: 120px; max-width: 100%; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); transition: 0.3s; }
+        .vs-icon { font-size: 30px; font-weight: 800; color: var(--gold); text-shadow: 0 0 10px var(--gold); animation: pulse 1.5s infinite; flex: 0 0 50px; text-align: center; }
+
+        /* Cards Area */
+        .cards-display { width: 100%; display: flex; justify-content: center; gap: 20px; margin: -20px 0 10px 0; }
+        .card-box { width: 70px; height: 100px; background: #222; border: 2px solid var(--gold); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: var(--gold); box-shadow: 0 0 15px rgba(255, 215, 0, 0.2); position: relative; transition: 0.5s transform; transform-style: preserve-3d; }
+        .card-box.flip { transform: rotateY(180deg); }
+
+        /* Bet Amount Input */
+        .bet-input-container { width: 100%; max-width: 350px; background: var(--card-bg); border: 1px solid #333; padding: 10px; border-radius: 10px; display: flex; gap: 8px; align-items: center; }
+        .bet-input-container span { color: gold; font-weight: bold; }
+        input[type="number"] { flex: 1; background: transparent; border: none; color: #fff; font-size: 16px; font-weight: 600; outline: none; }
+        input[type="number"]::placeholder { color: #555; }
+
+        /* Bet Buttons */
+        .bet-actions { width: 100%; display: flex; gap: 15px; justify-content: center; max-width: 400px; }
+        .bet-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 16px; color: #fff; cursor: pointer; text-transform: uppercase; transition: 0.2s; position: relative; overflow: hidden; }
+        .bet-btn.tiger { background: var(--tiger-red); box-shadow: 0 4px 0 #900; }
+        .bet-btn.dragon { background: var(--dragon-blue); box-shadow: 0 4px 0 #005; }
+        .bet-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #000; }
+        .bet-btn span.side-name { position: relative; z-index: 10; }
+
+        /* Bottom Section (Fake Payouts & Leaderboard & Referral) */
+        .bottom-area { padding: 15px; display: flex; flex-direction: column; gap: 15px; background: #050505; border-top: 1px solid #222; margin-top: 20px; }
+        
+        /* Fake Payouts & Leaderboard */
+        .bottom-widgets { display: flex; gap: 10px; }
+        .widget { flex: 1; background: var(--card-bg); border: 1px solid #222; border-radius: 8px; padding: 10px; font-size: 12px; height: 120px; overflow: hidden; }
+        .widget h4 { margin: 0 0 5px 0; color: #888; font-size: 13px; }
+        #payout-list li, #leaderboard-list li { list-style: none; color: #bbb; padding: 3px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        
+        /* Referral Section (MODIFIED) */
+        .referral-box { background: rgba(255, 215, 0, 0.05); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 8px; padding: 12px; text-align: center; }
+        .referral-box h4 { margin: 0 0 10px 0; color: var(--gold); }
+        .ref-input-group { display: flex; gap: 5px; background: #000; border: 1px solid #333; border-radius: 5px; overflow: hidden; }
+        #referral-link-input { flex: 1; border: none; background: transparent; color: #bbb; padding: 8px; font-size: 12px; outline: none; }
+        #copy-btn { background: var(--gold); color: #000; border: none; padding: 0 15px; font-weight: 700; font-size: 12px; cursor: pointer; }
+
+        /* Keyframes */
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0.5; transform: scale(1); } }
+        @keyframes winner { 0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); } 50% { box-shadow: 0 0 30px rgba(255, 215, 0, 1); } 100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); } }
+        .winning-fighter img { animation: winner 0.8s 3; border-radius: 50%; }
+
+    </style>
 </head>
 <body>
-    <audio id="bg-music" loop src="https://www.soundjay.com/free-music/sounds/ambient-dream-01.mp3"></audio>
-    <div id="payout-toast"><span id="toast-text"></span></div>
 
-    <div class="header">
-        <div class="user-info">ID: <span id="display-email">Loading...</span></div>
-        <div class="balance-box">PKR <span id="balance">0</span></div>
+    <header class="app-header">
+        <div class="logo">🚀 <span>BOOM</span></div>
+        <div class="balance-box">
+            <img src="https://img.icons8.com/color/48/coins.png" alt="coin">
+            <span id="balance">0</span>
+        </div>
+    </header>
+
+    <div class="user-panel">
+        <div class="user-email">Hi, <span id="display-email">Player</span></div>
+        <div class="quick-links">
+            <a href="deposit.html">Deposit</a>
+            <a href="withdraw.html">Withdraw</a>
+            <a href="kyc.html">KYC</a>
+        </div>
     </div>
 
-    <div id="game-timer">Next Round: <span id="timer-sec">15</span>s</div>
+    <main class="game-main">
+        
+        <div class="timer-container">
+            <img src="https://img.icons8.com/color/48/stopwatch.png" style="width:20px;">
+            <span>BETTING ENDS IN:</span>
+            <span id="timer-sec">15</span>
+        </div>
 
-    <div class="menu-grid">
-        <button onclick="location.href='deposit.html'">➕ Deposit</button>
-        <button onclick="location.href='withdraw.html'">💸 Withdraw</button>
-        <button onclick="location.href='kyc.html'">🛡️ KYC</button>
-        <button onclick="location.href='referral.html'">👥 Refer</button>
-    </div>
-
-    <div class="game-container">
-        <div class="table">
-            <div class="spot tiger-side">
-                <img src="https://img.icons8.com/color/144/tiger.png" alt="Tiger" width="80">
-                <p style="color: #ff4d4d; font-weight: bold; margin-top: 5px;">TIGER</p>
-                <div id="card-t" class="card">?</div>
+        <div class="battlefield">
+            <div class="fighter tiger-side" id="tiger-fighter">
+                <img src="https://img.icons8.com/color/144/tiger.png" alt="Tiger" class="character">
+                <p style="color:var(--tiger-red); font-weight:700; margin:5px 0 0 0;">TIGER</p>
             </div>
             
-            <div class="vs" style="font-size: 24px; font-weight: bold; color: gold;">VS</div>
+            <div class="vs-icon">VS</div>
             
-            <div class="spot dragon-side">
-                <img src="https://img.icons8.com/color/144/dragon.png" alt="Dragon" width="80">
-                <p style="color: #4d79ff; font-weight: bold; margin-top: 5px;">DRAGON</p>
-                <div id="card-d" class="card">?</div>
+            <div class="fighter dragon-side" id="dragon-fighter">
+                <img src="https://img.icons8.com/color/144/dragon.png" alt="Dragon" class="character">
+                <p style="color:var(--dragon-blue); font-weight:700; margin:5px 0 0 0;">DRAGON</p>
             </div>
         </div>
-        
-        <div class="bet-input-area" style="margin-top: 20px;">
-            <input type="number" id="bet-amount" value="10" min="10" style="width: 70%; padding: 10px; border-radius: 8px; border: 2px solid gold; background: #000; color: #fff; text-align: center;">
-        </div>
-        
-        <div class="bet-actions" style="margin-top: 15px; display: flex; justify-content: space-around;">
-            <button id="btn-tiger" onclick="placeBet('tiger')" class="btn-t" style="background: #d32f2f; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Bet Tiger</button>
-            <button id="btn-dragon" onclick="placeBet('dragon')" class="btn-d" style="background: #1976d2; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Bet Dragon</button>
-        </div>
-    </div>
 
-    <div class="leaderboard" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
-        <h3 style="color: gold;">🏆 Top Winners</h3>
-        <div id="leaderboard-list"></div>
+        <div class="cards-display">
+            <div class="card-box" id="card-t">?</div>
+            <div class="card-box" id="card-d">?</div>
+        </div>
+
+        <div class="bet-input-container">
+            <span>PKR</span>
+            <input type="number" id="bet-amount" placeholder="Enter Amount (Min 10)" value="100">
+        </div>
+
+        <div class="bet-actions">
+            <button class="bet-btn tiger" onclick="placeBet('tiger')">
+                <span class="side-name">Bet Tiger</span>
+            </button>
+            <button class="bet-btn dragon" onclick="placeBet('dragon')">
+                <span class="side-name">Bet Dragon</span>
+            </button>
+        </div>
+
+    </main>
+
+    <div class="bottom-area">
+        
+        <div class="bottom-widgets">
+            <div class="widget">
+                <h4>🎉 Latest Wins</h4>
+                <ul id="payout-list">
+                    <li><span>Raja_G</span> <span style="color:var(--gold);">5000</span></li>
+                    <li><span>Expert..</span> <span style="color:var(--gold);">1200</span></li>
+                    <li><span>Ali_Pro</span> <span style="color:var(--gold);">300</span></li>
+                </ul>
+            </div>
+            <div class="widget">
+                <h4>🏆 Top Players</h4>
+                <ul id="leaderboard-list">
+                    <li><span>Malik_7</span> <span style="color:var(--gold);">45000</span></li>
+                    <li><span>Zeeshan</span> <span style="color:var(--gold);">32000</span></li>
+                    <li><span>Sana_K</span> <span style="color:var(--gold);">18000</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="referral-box">
+            <h4>🤝 Invite & Earn 5% Bonus</h4>
+            <p style="font-size:11px; color:#aaa; margin: -5px 0 10px 0;">Share link with friends to get commission.</p>
+            <div class="ref-input-group">
+                <input type="text" id="referral-link-input" readonly value="Loading link...">
+                <button id="copy-btn" onclick="copyRefLink()">COPY</button>
+            </div>
+        </div>
+
     </div>
 
     <script type="module" src="main.js"></script>
+    <script>
+        // Copy Referral Link Function
+        function copyRefLink() {
+            var copyText = document.getElementById("referral-link-input");
+            if(copyText.value === "Loading link...") return;
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            Swal.fire({ title: "Copied!", text: "Referral link copied to clipboard.", icon: "success", timer: 1500, showConfirmButton: false });
+        }
+    </script>
 </body>
-</html>
+                </html>
+                
