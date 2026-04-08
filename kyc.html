@@ -1,37 +1,20 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>KYC - Boom Earnings</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container" style="padding:20px;">
-        <h2>KYC Verification</h2>
-        <p>Withdrawal ke liye lazmi hai.</p>
-        <div id="kyc-form">
-            <input type="text" id="full-name" placeholder="Full Name">
-            <input type="number" id="cnic" placeholder="CNIC Number">
-            <input type="number" id="phone" placeholder="WhatsApp Number">
-            <button onclick="submitKYC()" style="background:gold; color:black; font-weight:bold;">Submit Verification</button>
-        </div>
-        <div id="status-msg" style="display:none; margin-top:20px; color:orange;">Details submitted. Waiting for Admin approval.</div>
-    </div>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        const firebaseConfig = { /* PASTE CONFIG */ };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
-        window.submitKYC = () => {
-            const user = auth.currentUser;
-            set(ref(db, 'kyc_requests/' + user.uid), {
-                name: document.getElementById('full-name').value,
-                status: "pending"
-            }).then(() => { alert("Submitted!"); location.reload(); });
-        };
-    </script>
-</body>
-</html>
+window.submitKYC = async () => {
+    const name = document.getElementById('full-name').value;
+    const file = document.getElementById('id-card-file').files[0];
+    
+    if(!name || !file) return Swal.fire("Error", "Fill all fields", "error");
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+        const base64 = reader.result;
+        const kRef = push(ref(db, 'kyc'));
+        await set(kRef, {
+            uid: auth.currentUser.uid,
+            fullName: name,
+            idCardUrl: base64,
+            status: "pending"
+        });
+        Swal.fire("Submitted", "KYC sent for approval", "success");
+    };
+};
