@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Withdraw - Boom Earnings</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .box { border: 2px solid gold; padding: 25px; border-radius: 15px; background: #111; max-width: 400px; margin: auto; box-shadow: 0 0 15px rgba(255, 215, 0, 0.1); }
+        h2 { color: gold; margin-bottom: 20px; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; font-size: 16px; }
+        .info-text { font-size: 12px; color: #888; margin-bottom: 15px; }
+        button { width: 100%; padding: 15px; background: gold; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.3s; }
+        button:hover { background: #ffd700; transform: scale(1.02); }
+        .back-btn { margin-top: 15px; background: #222; color: #fff; width: 100%; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="box">
+        <h2>💸 Withdraw PKR</h2>
+        <div id="user-bal" style="color: gold; font-weight: bold; margin-bottom: 10px;">Balance: Loading...</div>
+        
+        <input type="number" id="with-amount" placeholder="Enter Amount (Min 500)">
+        <input type="text" id="wallet-address" placeholder="Easypaisa/JazzCash Number">
+        <input type="text" id="account-name" placeholder="Account Holder Name">
+        
+        <p class="info-text">Withdrawal requests take 1-24 hours for approval.</p>
+
+        <button onclick="submitWithdraw()">SUBMIT WITHDRAWAL</button>
+        <button class="back-btn" onclick="location.href='index.html'">⬅️ Back to Home</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, push, set, get, update, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let currentBalance = 0;
+        let currentUser = null;
+
+        // AUTH & BALANCE CHECK
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'login.html';
+            } else {
+                currentUser = user;
+                onValue(ref(db, `users/${user.uid}`), (snap) => {
+                    currentBalance = snap.val()?.balance || 0;
+                    document.getElementById('user-bal').innerText = "Current Balance: PKR " + currentBalance;
+                });
+            }
+        });
+
+        window.submitWithdraw = async () => {
+            const amt = parseInt(document.getElementById('with-amount').value);
+            const wallet = document.getElementById('wallet-address').value;
+            const name = document.getElementById('account-name').value;
+
+            if(!amt || amt < 500) return Swal.fire("Error", "Minimum withdraw is 500 PKR", "error");
+            if(!wallet || !name) return Swal.fire("Error", "Please fill all fields", "error");
+            if(amt > currentBalance) return Swal.fire("Error", "Insufficient Balance", "error");
+
+            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            try {
+                // 1. Add to Withdrawals list for Admin
+                const withdrawRef = push(ref(db, 'withdrawals'));
+                await set(withdrawRef, {
+                    uid: currentUser.uid,
+                    email: currentUser.email,
+                    amount: amt,
+                    walletAddress: wallet,
+                    accountName: name,
+                    status: "pending",
+                    timestamp: Date.now()
+                });
+
+                // 2. Deduct Balance immediately
+                await update(ref(db, `users/${currentUser.uid}`), {
+                    balance: currentBalance - amt
+                });
+
+                Swal.fire("Success", "Withdrawal request sent to Admin!", "success")
+                .then(() => location.href = 'index.html');
+
+            } catch (e) {
+                Swal.fire("Error", e.message, "error");
+            }
+        };
+    </script>
+</body>
+</html>
