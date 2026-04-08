@@ -27,31 +27,40 @@ const sndWin = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3'
 onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
+        // Balance Path Fix
         onValue(ref(db, `users/${user.uid}`), (snap) => {
             currentBalance = snap.val()?.balance || 0;
             document.getElementById('balance').innerText = currentBalance;
             document.getElementById('display-email').innerText = user.email.split('@')[0];
         });
+
+        // Admin Number Fetch (For Deposit Page)
+        onValue(ref(db, 'adminConfig/depositNumber'), (snap) => {
+            const numElem = document.getElementById('display-admin-number');
+            if(numElem) numElem.innerText = snap.val() || "0300-0000000";
+        });
+
         startTimer();
     } else { window.location.href = 'login.html'; }
 });
 
+// Game & Reward Logic
 function startTimer() {
     let interval = setInterval(() => {
         const timerElem = document.getElementById('timer');
         if(timeLeft > 0) { timerElem.innerText = timeLeft; timeLeft--; }
-        else { clearInterval(interval); timerElem.innerText = "0"; showResult(); }
+        else { clearInterval(interval); timerElem.innerText = "0"; processResult(); }
     }, 1000);
 }
 
-async function showResult() {
+async function processResult() {
     canBet = false;
     const resDisplay = document.getElementById('result-display');
     const gameSnap = await get(ref(db, 'gameControl/nextResult'));
     let winner = gameSnap.val() || 'random';
     if(winner === 'random') winner = Math.random() > 0.5 ? 'tiger' : 'dragon';
 
-    resDisplay.innerHTML = `WINNER: <span style="color:gold;">${winner.toUpperCase()}</span>`;
+    resDisplay.innerHTML = `WINNER: ${winner.toUpperCase()}`;
     
     let totalWin = 0;
     myActiveBets.forEach(bet => { if(bet.side === winner) totalWin += bet.amount * 2; });
@@ -59,6 +68,7 @@ async function showResult() {
     if(totalWin > 0) {
         sndWin.play();
         await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + totalWin });
+        Swal.fire("Success", "You Won: " + totalWin, "success");
     }
 
     setTimeout(() => {
@@ -71,7 +81,7 @@ async function showResult() {
 window.placeBet = async (side) => {
     if(!canBet) return;
     const amt = parseInt(document.getElementById('bet-amount').value);
-    if(amt > currentBalance || amt < 10) return;
+    if(amt > currentBalance || amt < 10) return Swal.fire("Error", "Balance Low", "error");
     
     sndClick.play();
     myActiveBets.push({ side: side, amount: amt });
