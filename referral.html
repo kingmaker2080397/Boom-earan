@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Refer & Earn - Boom Earnings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="padding:20px;">
+        <h2>Refer & Earn</h2>
+        <div style="border:2px solid gold; padding:20px; border-radius:15px; background:#111;">
+            <p>Har naye dost par payein</p>
+            <h1 style="color:gold;">RS 30</h1>
+            <p>Apna link copy karein:</p>
+            <input type="text" id="ref-link" readonly style="text-align:center;">
+            <button onclick="copyRef()" style="background:gold; color:black;">Copy Link</button>
+        </div>
+    </div>
+    <script type="module">
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        const auth = getAuth();
+        auth.onAuthStateChanged(user => {
+            if(user) document.getElementById('ref-link').value = window.location.origin + "/register.html?ref=" + user.uid;
+        });
+        window.copyRef = () => {
+            document.getElementById('ref-link').select();
+            document.execCommand('copy');
+            alert("Link Copied!");
+        };
+    </script>
+</body>
+</html>
