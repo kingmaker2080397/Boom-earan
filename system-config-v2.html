@@ -1,36 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Panel</title>
-    <style>body{background:#000;color:#fff;font-family:sans-serif;padding:20px;}.card{border:1px solid gold;padding:15px;margin:10px;background:#111;}</style>
+    <title>Master Control - Boom Earnings</title>
+    <style>
+        body { background: #000; color: gold; font-family: sans-serif; padding: 20px; }
+        .req-card { border: 2px solid gold; padding: 15px; margin: 15px 0; border-radius: 12px; background: #111; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        .btn-reject { background: #dc3545; margin-left: 10px; }
+        img { max-width: 200px; display: block; margin: 10px 0; border: 1px solid #333; }
+    </style>
 </head>
 <body>
-    <h1>Master Control</h1>
-    <div id="deposit-requests">Loading Deposits...</div>
+    <h1>Master Control Panel</h1>
+    <hr border="1" color="gold">
+    <div id="deposit-requests">Loading pending deposits...</div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-        const firebaseConfig = { /* PASTE CONFIG */ };
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        onValue(ref(db, 'deposits'), (snap) => {
-            const div = document.getElementById('deposit-requests');
-            div.innerHTML = "";
-            snap.forEach(child => {
-                const d = child.val();
-                div.innerHTML += `<div class="card">
-                    <p>User: ${d.email} | Amount: RS ${d.amount}</p>
-                    <a href="${d.screenshotUrl}" target="_blank">View Screenshot</a><br><br>
-                    <button onclick="approve('${d.uid}', ${d.amount}, '${child.key}')">Approve & Add Balance</button>
-                </div>`;
-            });
+
+        // Pending Deposits ko load karne ka function
+        const depositRef = ref(db, 'deposits');
+        onValue(depositRef, (snapshot) => {
+            const container = document.getElementById('deposit-requests');
+            container.innerHTML = "";
+            const data = snapshot.val();
+
+            if(!data) {
+                container.innerHTML = "<h3>No pending deposits found in database.</h3>";
+                return;
+            }
+
+            let found = false;
+            for (let key in data) {
+                if(data[key].status === "pending") {
+                    found = true;
+                    const div = document.createElement('div');
+                    div.className = "req-card";
+                    div.innerHTML = `
+                        <p><strong>User Email:</strong> ${data[key].email}</p>
+                        <p><strong>Amount:</strong> PKR ${data[key].amount}</p>
+                        <p><strong>Screenshot:</strong></p>
+                        <a href="${data[key].screenshotUrl}" target="_blank">
+                            <img src="${data[key].screenshotUrl}" alt="Proof">
+                        </a>
+                        <button onclick="manageDeposit('${key}', '${data[key].uid}', ${data[key].amount}, 'approve')">Approve ✅</button>
+                        <button class="btn-reject" onclick="manageDeposit('${key}', '${data[key].uid}', 0, 'reject')">Reject ❌</button>
+                    `;
+                    container.appendChild(div);
+                }
+            }
+            if(!found) container.innerHTML = "<h3>All deposits are cleared!</h3>";
         });
-        window.approve = async (uid, amt, key) => {
-            const uRef = ref(db, 'users/' + uid);
-            const cur = (await get(uRef)).val().balance || 0;
-            await update(uRef, { balance: cur + amt });
-            await remove(ref(db, 'deposits/' + key));
-            alert("Approved!");
+
+        // Approve ya Reject karne ka function
+        window.manageDeposit = async (depId, userUid, amount, action) => {
+            if(action === 'approve') {
+                const userRef = ref(db, `users/${userUid}`);
+                const userSnap = await get(userRef);
+                const currentBal = userSnap.val()?.balance || 0;
+                
+                // User ka balance update karein
+                await update(userRef, { balance: currentBal + amount });
+                // Deposit status change karein
+                await update(ref(db, `deposits/${depId}`), { status: "approved" });
+                alert("Payment Approved! Balance added to user.");
+            } else {
+                await update(ref(db, `deposits/${depId}`), { status: "rejected" });
+                alert("Deposit Rejected.");
+            }
         };
     </script>
 </body>
