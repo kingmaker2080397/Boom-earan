@@ -18,100 +18,102 @@ let currentBalance = 0;
 let currentUser = null;
 let canBet = true;
 let timeLeft = 15;
-let myBet = null;
+let myActiveBets = []; // Saari trades yahan save hongi
 
-// Audio Elements
-const sndClick = document.getElementById('sound-click');
-const sndWin = document.getElementById('sound-win');
-const sndTimer = document.getElementById('sound-timer');
+// Audio
+const sndClick = document.getElementById('snd-click');
+const sndWin = document.getElementById('snd-win');
+const sndTick = document.getElementById('snd-tick');
 
-// --- User & Balance ---
+// Auth Listener
 onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
         onValue(ref(db, `users/${user.uid}`), (snap) => {
             currentBalance = snap.val()?.balance || 0;
             document.getElementById('balance').innerText = currentBalance;
-            document.getElementById('display-email').innerText = "Hi, " + user.email.split('@')[0];
+            document.getElementById('display-email').innerText = user.email.split('@')[0];
         });
-        
-        // Referral Link
-        const refLink = `https://kingmaker2080397.github.io/Boom-earan/register.html?ref=${user.uid}`;
-        document.getElementById('referral-link-input').value = refLink;
-        
-        startTimer(); // Game Start
+        document.getElementById('referral-link-input').value = `https://kingmaker2080397.github.io/Boom-earan/register.html?ref=${user.uid}`;
+        startTimer();
     } else {
         window.location.href = 'login.html';
     }
 });
 
-// --- Timer & Game Logic ---
+// Timer Logic
 function startTimer() {
-    let timerInterval = setInterval(() => {
+    let interval = setInterval(() => {
         const timerElem = document.getElementById('timer');
-        const resDisplay = document.getElementById('result-display');
-
         if(timeLeft > 0) {
             timerElem.innerText = timeLeft;
-            if(timeLeft <= 5) sndTimer.play(); // Last 5 seconds sound
+            if(timeLeft <= 5) sndTick.play();
             timeLeft--;
         } else {
-            clearInterval(timerInterval);
+            clearInterval(interval);
             timerElem.innerText = "0";
             showResult();
         }
     }, 1000);
 }
 
+// Result & Multiple Reward Calculation
 async function showResult() {
     canBet = false;
     const resDisplay = document.getElementById('result-display');
-    resDisplay.innerText = "Checking Cards...";
+    resDisplay.innerText = "Checking Result...";
 
-    // Admin control check
+    // Get Admin Result
     const gameSnap = await get(ref(db, 'gameControl/nextResult'));
     let winner = gameSnap.val() || 'random';
     if(winner === 'random') winner = Math.random() > 0.5 ? 'tiger' : 'dragon';
 
     setTimeout(async () => {
         resDisplay.innerHTML = `WINNER: <span style="color:gold;">${winner.toUpperCase()}</span>`;
-        if(myBet && myBet.side === winner) {
-            sndWin.play();
-            const winAmt = myBet.amount * 2;
-            await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + winAmt });
-            Swal.fire("You Won!", `+${winAmt} PKR`, "success");
-        }
         
-        // Reset game after 5 seconds
+        // Reward for ALL active bets
+        let totalWin = 0;
+        myActiveBets.forEach(bet => {
+            if(bet.side === winner) {
+                totalWin += bet.amount * 2;
+            }
+        });
+
+        if(totalWin > 0) {
+            sndWin.play();
+            await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + totalWin });
+            Swal.fire("Winner!", `Total Reward: ${totalWin} PKR`, "success");
+        }
+
+        // Reset for next round
         setTimeout(() => {
             timeLeft = 15;
-            myBet = null;
             canBet = true;
+            myActiveBets = []; // Bets khali
             resDisplay.innerText = "Betting Started!";
             startTimer();
         }, 5000);
     }, 2000);
 }
 
-// --- Bet Function ---
+// Bet Function
 window.placeBet = async (side) => {
-    if(!canBet) return Swal.fire("Wait", "Round ended", "info");
-    
+    if(!canBet) return Swal.fire("Closed", "Wait for next round", "info");
     const amt = parseInt(document.getElementById('bet-amount').value);
-    if(amt > currentBalance || amt < 10) return Swal.fire("Error", "Invalid Balance", "error");
+
+    if(amt > currentBalance || amt < 10) return Swal.fire("Error", "Insufficient Balance", "error");
 
     sndClick.play();
-    myBet = { side: side, amount: amt };
-    await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance - amt });
+    myActiveBets.push({ side: side, amount: amt }); // List mein add karein
     
-    Swal.fire({ title: "Bet Placed", text: side.toUpperCase(), icon: "success", timer: 1000, showConfirmButton: false });
+    await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance - amt });
+    Swal.fire({ title: "Bet Placed", text: `${amt} on ${side}`, icon: "success", timer: 800, showConfirmButton: false });
 };
 
-// --- Copy Function ---
 window.copyRefLink = () => {
-    const copyText = document.getElementById("referral-link-input");
-    copyText.select();
-    navigator.clipboard.writeText(copyText.value);
-    Swal.fire("Copied", "Link shared!", "success");
+    const input = document.getElementById('referral-link-input');
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    Swal.fire("Copied!", "Link shared", "success");
 };
-        
+                       
