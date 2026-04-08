@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Earnings - Casino</title>
+    <title>Boom Earnings - Professional</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <audio id="bg-music" loop src="https://www.soundjay.com/free-music/sounds/ambient-dream-01.mp3"></audio>
+    <div id="payout-toast"><span id="toast-text"></span></div>
+
     <div class="header">
         <div class="user-info">ID: <span id="display-email">Loading...</span></div>
         <div class="balance-box">PKR <span id="balance">0</span></div>
@@ -15,34 +17,45 @@
 
     <div id="game-timer">Next Round: <span id="timer-sec">15</span>s</div>
 
-    <div class="game-container">
-        <div class="table">
-            <div class="spot tiger-side">
-                <img src="https://cdn-icons-png.flaticon.com/512/3519/3519323.png" width="80">
-                <p>TIGER</p>
-                <div id="card-t" class="card">?</div>
-            </div>
-            <div class="vs">VS</div>
-            <div class="spot dragon-side">
-                <img src="https://cdn-icons-png.flaticon.com/512/4359/4359654.png" width="80">
-                <p>DRAGON</p>
-                <div id="card-d" class="card">?</div>
-            </div>
-        </div>
-        <input type="number" id="bet-amount" value="10" min="10">
-        <div class="bet-actions">
-            <button onclick="placeBet('tiger')" class="btn-t">Bet Tiger</button>
-            <button onclick="placeBet('dragon')" class="btn-d">Bet Dragon</button>
-        </div>
-    </div>
-
     <div class="menu-grid">
         <button onclick="location.href='deposit.html'">➕ Deposit</button>
         <button onclick="location.href='withdraw.html'">💸 Withdraw</button>
         <button onclick="location.href='kyc.html'">🛡️ KYC</button>
         <button onclick="location.href='referral.html'">👥 Refer</button>
     </div>
+
+    <div class="game-container">
+        <div class="table">
+            <div class="spot tiger-side">
+                <img src="https://img.icons8.com/color/144/tiger.png" alt="Tiger" width="80">
+                <p style="color: #ff4d4d; font-weight: bold; margin-top: 5px;">TIGER</p>
+                <div id="card-t" class="card">?</div>
+            </div>
+            
+            <div class="vs" style="font-size: 24px; font-weight: bold; color: gold;">VS</div>
+            
+            <div class="spot dragon-side">
+                <img src="https://img.icons8.com/color/144/dragon.png" alt="Dragon" width="80">
+                <p style="color: #4d79ff; font-weight: bold; margin-top: 5px;">DRAGON</p>
+                <div id="card-d" class="card">?</div>
+            </div>
+        </div>
+        
+        <div class="bet-input-area" style="margin-top: 20px;">
+            <input type="number" id="bet-amount" value="10" min="10" style="width: 70%; padding: 10px; border-radius: 8px; border: 2px solid gold; background: #000; color: #fff; text-align: center;">
+        </div>
+        
+        <div class="bet-actions" style="margin-top: 15px; display: flex; justify-content: space-around;">
+            <button id="btn-tiger" onclick="placeBet('tiger')" class="btn-t" style="background: #d32f2f; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Bet Tiger</button>
+            <button id="btn-dragon" onclick="placeBet('dragon')" class="btn-d" style="background: #1976d2; color: white; padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Bet Dragon</button>
+        </div>
+    </div>
+
+    <div class="leaderboard" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+        <h3 style="color: gold;">🏆 Top Winners</h3>
+        <div id="leaderboard-list"></div>
+    </div>
+
     <script type="module" src="main.js"></script>
 </body>
-            </html>
-            
+</html>
