@@ -18,14 +18,12 @@ let currentBalance = 0;
 let currentUser = null;
 let canBet = true;
 let timeLeft = 15;
-let myActiveBets = []; // Saari trades yahan save hongi
+let myActiveBets = [];
 
-// Audio
-const sndClick = document.getElementById('snd-click');
-const sndWin = document.getElementById('snd-win');
-const sndTick = document.getElementById('snd-tick');
+// Sound Objects
+const sndClick = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+const sndWin = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
 
-// Auth Listener
 onAuthStateChanged(auth, (user) => {
     if (user) {
         currentUser = user;
@@ -34,86 +32,49 @@ onAuthStateChanged(auth, (user) => {
             document.getElementById('balance').innerText = currentBalance;
             document.getElementById('display-email').innerText = user.email.split('@')[0];
         });
-        document.getElementById('referral-link-input').value = `https://kingmaker2080397.github.io/Boom-earan/register.html?ref=${user.uid}`;
         startTimer();
-    } else {
-        window.location.href = 'login.html';
-    }
+    } else { window.location.href = 'login.html'; }
 });
 
-// Timer Logic
 function startTimer() {
     let interval = setInterval(() => {
         const timerElem = document.getElementById('timer');
-        if(timeLeft > 0) {
-            timerElem.innerText = timeLeft;
-            if(timeLeft <= 5) sndTick.play();
-            timeLeft--;
-        } else {
-            clearInterval(interval);
-            timerElem.innerText = "0";
-            showResult();
-        }
+        if(timeLeft > 0) { timerElem.innerText = timeLeft; timeLeft--; }
+        else { clearInterval(interval); timerElem.innerText = "0"; showResult(); }
     }, 1000);
 }
 
-// Result & Multiple Reward Calculation
 async function showResult() {
     canBet = false;
     const resDisplay = document.getElementById('result-display');
-    resDisplay.innerText = "Checking Result...";
-
-    // Get Admin Result
     const gameSnap = await get(ref(db, 'gameControl/nextResult'));
     let winner = gameSnap.val() || 'random';
     if(winner === 'random') winner = Math.random() > 0.5 ? 'tiger' : 'dragon';
 
-    setTimeout(async () => {
-        resDisplay.innerHTML = `WINNER: <span style="color:gold;">${winner.toUpperCase()}</span>`;
-        
-        // Reward for ALL active bets
-        let totalWin = 0;
-        myActiveBets.forEach(bet => {
-            if(bet.side === winner) {
-                totalWin += bet.amount * 2;
-            }
-        });
+    resDisplay.innerHTML = `WINNER: <span style="color:gold;">${winner.toUpperCase()}</span>`;
+    
+    let totalWin = 0;
+    myActiveBets.forEach(bet => { if(bet.side === winner) totalWin += bet.amount * 2; });
 
-        if(totalWin > 0) {
-            sndWin.play();
-            await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + totalWin });
-            Swal.fire("Winner!", `Total Reward: ${totalWin} PKR`, "success");
-        }
+    if(totalWin > 0) {
+        sndWin.play();
+        await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + totalWin });
+    }
 
-        // Reset for next round
-        setTimeout(() => {
-            timeLeft = 15;
-            canBet = true;
-            myActiveBets = []; // Bets khali
-            resDisplay.innerText = "Betting Started!";
-            startTimer();
-        }, 5000);
-    }, 2000);
+    setTimeout(() => {
+        timeLeft = 15; canBet = true; myActiveBets = [];
+        resDisplay.innerText = "Betting Started!";
+        startTimer();
+    }, 5000);
 }
 
-// Bet Function
 window.placeBet = async (side) => {
-    if(!canBet) return Swal.fire("Closed", "Wait for next round", "info");
+    if(!canBet) return;
     const amt = parseInt(document.getElementById('bet-amount').value);
-
-    if(amt > currentBalance || amt < 10) return Swal.fire("Error", "Insufficient Balance", "error");
-
-    sndClick.play();
-    myActiveBets.push({ side: side, amount: amt }); // List mein add karein
+    if(amt > currentBalance || amt < 10) return;
     
+    sndClick.play();
+    myActiveBets.push({ side: side, amount: amt });
     await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance - amt });
-    Swal.fire({ title: "Bet Placed", text: `${amt} on ${side}`, icon: "success", timer: 800, showConfirmButton: false });
 };
-
-window.copyRefLink = () => {
-    const input = document.getElementById('referral-link-input');
-    input.select();
-    navigator.clipboard.writeText(input.value);
-    Swal.fire("Copied!", "Link shared", "success");
-};
-                       
+                     
