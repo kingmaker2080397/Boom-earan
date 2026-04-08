@@ -1,52 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Master Control - Full Panel</title>
+    <title>Master Admin Control</title>
     <style>
         body { background: #000; color: gold; font-family: sans-serif; padding: 20px; }
-        .section { border: 2px solid #333; padding: 15px; margin-bottom: 20px; border-radius: 10px; background: #050505; }
-        h2 { color: #fff; border-bottom: 1px solid gold; padding-bottom: 5px; margin-top: 0; }
-        .card { background: #111; border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 8px; }
-        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; margin: 5px; transition: 0.3s; }
-        button:hover { opacity: 0.8; transform: scale(1.05); }
-        .btn-rej { background: #dc3545; }
-        .btn-game { min-width: 120px; font-size: 14px; }
-        img { max-width: 200px; display: block; margin: 10px 0; border: 1px solid gold; border-radius: 5px; }
-        .status-badge { color: cyan; font-weight: bold; }
+        .card { background: #111; border: 1px solid gold; padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        button { padding: 10px; background: gold; border: none; font-weight: bold; cursor: pointer; margin: 5px; border-radius: 5px; }
+        input { padding: 10px; width: 300px; background: #222; color: #fff; border: 1px solid #444; }
     </style>
 </head>
 <body>
+    <h2>🚀 Master Control Panel</h2>
 
-    <h1>🚀 Boom Master Control Panel</h1>
-
-    <div class="section" style="border-color: gold;">
-        <h2>🎮 Result Control (Next Round)</h2>
-        <p>Current Mode: <span id="current-setting" class="status-badge">RANDOM</span></p>
-        <button class="btn-game" style="background: #d32f2f;" onclick="setResult('tiger')">FORCE TIGER 🐯</button>
-        <button class="btn-game" style="background: #1976d2;" onclick="setResult('dragon')">FORCE DRAGON 🐉</button>
-        <button class="btn-game" style="background: #555;" onclick="setResult('random')">SET RANDOM 🎲</button>
+    <div class="card">
+        <h3>🎮 Result Control</h3>
+        <button onclick="setRes('tiger')">Tiger Win 🐅</button>
+        <button onclick="setRes('dragon')">Dragon Win 🐉</button>
+        <button onclick="setRes('random')">Set Random 🎲</button>
     </div>
 
-    <div class="section">
-        <h2>💰 Deposit Requests</h2>
-        <div id="deposit-list">Checking for deposits...</div>
+    <div class="card">
+        <h3>💰 Change Deposit Address</h3>
+        <input type="text" id="new-addr" placeholder="Enter EasyPaisa/JazzCash Number">
+        <button onclick="updateAddr()">Update Address</button>
     </div>
 
-    <div class="section">
-        <h2>💸 Withdraw Requests</h2>
-        <div id="withdraw-list">Checking for withdrawals...</div>
-    </div>
-
-    <div class="section">
-        <h2>🛡️ KYC Verification</h2>
-        <div id="kyc-list">Checking for KYC...</div>
+    <div class="card">
+        <h3>🛡️ KYC Requests</h3>
+        <div id="kyc-requests">Loading...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
@@ -55,81 +41,29 @@
             projectId: "boom-earnings",
             appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- Result Manipulation ---
-        window.setResult = async (mode) => {
-            await update(ref(db, 'gameControl'), { nextResult: mode });
-            alert("Setting updated to: " + mode.toUpperCase());
+        window.setRes = (val) => set(ref(db, 'gameControl/nextResult'), val);
+        window.updateAddr = () => {
+            const addr = document.getElementById('new-addr').value;
+            set(ref(db, 'adminSettings/depositAddress'), addr).then(() => alert("Address Updated!"));
         };
 
-        onValue(ref(db, 'gameControl/nextResult'), (snap) => {
-            document.getElementById('current-setting').innerText = (snap.val() || "RANDOM").toUpperCase();
-        });
-
-        // --- Deposits Fetch ---
-        onValue(ref(db, 'deposits'), (snap) => {
-            const list = document.getElementById('deposit-list');
-            list.innerHTML = ""; const data = snap.val();
-            if(!data) { list.innerHTML = "No pending deposits."; return; }
-            for(let key in data) if(data[key].status === 'pending') {
-                const div = document.createElement('div'); div.className = "card";
-                div.innerHTML = `<p>User: ${data[key].email} | PKR ${data[key].amount}</p>
-                    <img src="${data[key].screenshotUrl}">
-                    <button onclick="approveDep('${key}', '${data[key].uid}', ${data[key].amount})">APPROVE ✅</button>`;
-                list.appendChild(div);
-            }
-        });
-
-        window.approveDep = async (id, uid, amt) => {
-            const uRef = ref(db, `users/${uid}`); 
-            const uSnap = await get(uRef);
-            const bal = uSnap.val()?.balance || 0;
-            await update(uRef, { balance: bal + amt });
-            await update(ref(db, `deposits/${id}`), { status: "approved" });
-            alert("Deposit Approved!");
-        };
-
-        // --- Withdrawals Fetch ---
-        onValue(ref(db, 'withdrawals'), (snap) => {
-            const list = document.getElementById('withdraw-list');
-            list.innerHTML = ""; const data = snap.val();
-            if(!data) { list.innerHTML = "No pending withdrawals."; return; }
-            for(let key in data) if(data[key].status === 'pending') {
-                const div = document.createElement('div'); div.className = "card";
-                div.innerHTML = `<p>User: ${data[key].email} | Amount: ${data[key].amount}</p>
-                    <p>Wallet: ${data[key].walletAddress}</p>
-                    <button onclick="approveWith('${key}')">MARK AS SENT 💸</button>`;
-                list.appendChild(div);
-            }
-        });
-
-        window.approveWith = async (id) => {
-            await update(ref(db, `withdrawals/${id}`), { status: "completed" });
-            alert("Withdrawal marked as completed!");
-        };
-
-        // --- KYC Fetch ---
         onValue(ref(db, 'kyc'), (snap) => {
-            const list = document.getElementById('kyc-list');
-            list.innerHTML = ""; const data = snap.val();
-            if(!data) { list.innerHTML = "No pending KYC."; return; }
-            for(let key in data) if(data[key].status === 'pending') {
-                const div = document.createElement('div'); div.className = "card";
-                div.innerHTML = `<p><strong>Name:</strong> ${data[key].fullName}</p>
-                    <p><strong>Email:</strong> ${data[key].email}</p>
-                    <img src="${data[key].idCardUrl}">
-                    <button onclick="approveKYC('${key}', '${data[key].uid}')">APPROVE KYC 🛡️</button>`;
-                list.appendChild(div);
+            const div = document.getElementById('kyc-requests');
+            div.innerHTML = "";
+            const data = snap.val();
+            for(let key in data) if(data[key].status==='pending') {
+                div.innerHTML += `<div style="border-bottom:1px solid #444; padding:10px;">
+                    ${data[key].email} <button onclick="approveKYC('${key}','${data[key].uid}')">Approve</button>
+                </div>`;
             }
         });
 
-        window.approveKYC = async (id, uid) => {
-            await update(ref(db, `users/${uid}`), { kycVerified: true });
-            await update(ref(db, `kyc/${id}`), { status: "verified" });
-            alert("User KYC Verified!");
+        window.approveKYC = (id, uid) => {
+            update(ref(db, `users/${uid}`), { kycVerified: true });
+            update(ref(db, `kyc/${id}`), { status: 'verified' });
         };
     </script>
 </body>
