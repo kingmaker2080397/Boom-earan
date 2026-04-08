@@ -3,39 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Earnings - Tiger vs Dragon</title>
+    <title>Boom Earnings - Professional</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="payout-toast"><span class="toast-icon"></span><span id="toast-text"></span></div>
+    <audio id="bg-music" loop src="https://www.soundjay.com/free-music/sounds/ambient-dream-01.mp3"></audio>
+
+    <div id="payout-toast"><span id="toast-text"></span></div>
+
     <div class="header">
         <div class="user-info">ID: <span id="display-email">Loading...</span></div>
         <div class="balance-box">PKR <span id="balance">0</span></div>
     </div>
+
+    <div id="game-timer">Next Round: <span id="timer-sec">15</span>s</div>
+
     <div class="menu-grid">
         <button onclick="location.href='deposit.html'">➕ Deposit</button>
         <button onclick="location.href='withdraw.html'">💸 Withdraw</button>
         <button onclick="location.href='kyc.html'">🛡️ KYC</button>
         <button onclick="location.href='referral.html'">👥 Refer</button>
     </div>
+
     <div class="game-container">
-        <h2>Tiger vs Dragon</h2>
         <div class="table">
-            <div class="spot tiger-spot">TIGER<div id="card-t" class="card">?</div></div>
+            <div class="spot tiger-side">
+                <img src="https://cdn-icons-png.flaticon.com/512/3519/3519323.png" width="60">
+                <p>TIGER</p>
+                <div id="card-t" class="card">?</div>
+            </div>
             <div class="vs">VS</div>
-            <div class="spot dragon-spot">DRAGON<div id="card-d" class="card">?</div></div>
+            <div class="spot dragon-side">
+                <img src="https://cdn-icons-png.flaticon.com/512/4359/4359654.png" width="60">
+                <p>DRAGON</p>
+                <div id="card-d" class="card">?</div>
+            </div>
         </div>
-        <input type="number" id="bet-amount" placeholder="Limit 10 - 500" value="10">
+        
+        <div class="bet-input-area">
+            <input type="number" id="bet-amount" value="10" min="10">
+        </div>
+        
         <div class="bet-actions">
-            <button onclick="play('tiger')" class="btn-t">Bet Tiger</button>
-            <button onclick="play('dragon')" class="btn-d">Bet Dragon</button>
+            <button id="btn-tiger" onclick="placeBet('tiger')" class="btn-t">Bet Tiger</button>
+            <button id="btn-dragon" onclick="placeBet('dragon')" class="btn-d">Bet Dragon</button>
         </div>
     </div>
+
     <div class="leaderboard">
         <h3>🏆 Top Winners</h3>
         <div id="leaderboard-list"></div>
     </div>
+
     <script type="module" src="main.js"></script>
 </body>
-  </html>
-  
+</html>
+    
