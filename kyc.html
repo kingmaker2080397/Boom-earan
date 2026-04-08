@@ -1,132 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KYC Verification - Boom Earnings</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body { background: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; display: flex; justify-content: center; }
-        .kyc-container { background: #111; border: 2px solid gold; padding: 30px; border-radius: 20px; max-width: 450px; width: 100%; box-shadow: 0 0 20px rgba(255, 215, 0, 0.2); }
-        h2 { color: gold; text-align: center; margin-bottom: 10px; }
-        p { color: #aaa; text-align: center; font-size: 14px; margin-bottom: 25px; }
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; color: gold; font-weight: bold; }
-        input[type="text"], input[type="file"] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
-        #preview-id { width: 100%; height: 200px; border: 2px dashed #444; border-radius: 10px; margin-top: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #preview-id img { max-width: 100%; max-height: 100%; display: none; }
-        .submit-btn { width: 100%; padding: 15px; background: gold; color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; }
-        .submit-btn:hover { background: #e6c200; transform: scale(1.02); }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #aaa; text-decoration: none; font-size: 14px; }
-    </style>
-</head>
-<body>
+// KYC fetch karne ka sab se asaan aur sahi tarika
+onValue(ref(db, 'kyc'), (snap) => {
+    const list = document.getElementById('kyc-list');
+    if (!list) return;
+    list.innerHTML = ""; 
+    const data = snap.val();
+    
+    if(!data) { 
+        list.innerHTML = "<p style='color:gray;'>No pending KYC requests found.</p>"; 
+        return; 
+    }
 
-    <div class="kyc-container">
-        <h2>🛡️ Identity Verification</h2>
-        <p>Please upload your ID Card or Passport for KYC approval.</p>
+    for(let key in data) {
+        if(data[key].status === 'pending') {
+            const div = document.createElement('div');
+            div.className = "card";
+            div.innerHTML = `
+                <p><strong>Name:</strong> ${data[key].fullName}</p>
+                <p><strong>User:</strong> ${data[key].email}</p>
+                <img src="${data[key].idCardUrl}" style="width:200px; border:1px solid gold; margin:10px 0;">
+                <br>
+                <button onclick="approveKYC('${key}', '${data[key].uid}')" style="background:green;">APPROVE ✅</button>
+            `;
+            list.appendChild(div);
+        }
+    }
+}, (error) => {
+    console.error("KYC Error:", error);
+    document.getElementById('kyc-list').innerHTML = "Error loading data. Check Firebase Rules.";
+});
 
-        <div class="input-group">
-            <label>Full Name (As per ID)</label>
-            <input type="text" id="full-name" placeholder="Enter your full name">
-        </div>
-
-        <div class="input-group">
-            <label>Upload ID Card Front</label>
-            <input type="file" id="id-card-file" accept="image/*" onchange="previewID(event)">
-            <div id="preview-id">
-                <span id="placeholder-text">Screenshot Preview</span>
-                <img id="id-img-preview" src="">
-            </div>
-        </div>
-
-        <button class="submit-btn" onclick="submitKYC()">SUBMIT FOR APPROVAL</button>
-        <a href="index.html" class="back-link">⬅️ Back to Dashboard</a>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-            authDomain: "boom-earnings.firebaseapp.com",
-            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-            projectId: "boom-earnings",
-            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let currentUser = null;
-
-        // AUTH CHECK: Logout Redirect Fix
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-            } else {
-                currentUser = user;
-            }
-        });
-
-        // Image Preview Logic
-        window.previewID = (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('id-img-preview').src = e.target.result;
-                    document.getElementById('id-img-preview').style.display = 'block';
-                    document.getElementById('placeholder-text').style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-
-        // Submit to Firebase
-        window.submitKYC = async () => {
-            const name = document.getElementById('full-name').value;
-            const fileInput = document.getElementById('id-card-file');
-            const file = fileInput.files[0];
-
-            if (!name) return Swal.fire("Error", "Please enter your full name", "error");
-            if (!file) return Swal.fire("Error", "Please upload ID screenshot", "error");
-
-            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                try {
-                    const base64Img = reader.result;
-                    const kycRef = push(ref(db, 'kyc'));
-                    
-                    await set(kycRef, {
-                        uid: currentUser.uid,
-                        email: currentUser.email,
-                        fullName: name,
-                        idCardUrl: base64Img,
-                        status: "pending",
-                        timestamp: Date.now()
-                    });
-
-                    Swal.fire({
-                        title: "Submitted!",
-                        text: "Your KYC is pending for admin approval.",
-                        icon: "success",
-                        confirmButtonColor: "gold"
-                    }).then(() => {
-                        window.location.href = 'index.html';
-                    });
-
-                } catch (error) {
-                    Swal.fire("Error", "Something went wrong: " + error.message, "error");
-                }
-            };
-        };
-    </script>
-</body>
-</html>
+// Approve Function
+window.approveKYC = async (id, uid) => {
+    try {
+        await update(ref(db, `users/${uid}`), { kycVerified: true });
+        await update(ref(db, `kyc/${id}`), { status: "verified" });
+        alert("User Verified Successfully!");
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
