@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Boom Earnings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container" style="margin-top:50px; padding:20px; border:1px solid gold; border-radius:15px;">
+        <h2 style="color:gold;">Login</h2>
+        <input type="email" id="email" placeholder="Email Address">
+        <input type="password" id="pass" placeholder="Password">
+        <button onclick="handleLogin()" style="background:gold; color:black; font-weight:bold; width:100%; padding:12px; border-radius:8px;">LOGIN</button>
+        <p>Account nahi hai? <a href="register.html" style="color:gold;">Register Karein</a></p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.handleLogin = () => {
+            const e = document.getElementById('email').value;
+            const p = document.getElementById('pass').value;
+            signInWithEmailAndPassword(auth, e, p)
+            .then(() => location.href = 'index.html')
+            .catch(err => alert("Ghalat Detail!"));
+        };
+    </script>
+</body>
+</html>
