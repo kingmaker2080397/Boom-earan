@@ -1,19 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Master Control - Boom Earnings</title>
+    <title>Master Control - Full Power</title>
     <style>
         body { background: #000; color: gold; font-family: sans-serif; padding: 20px; }
-        .req-card { border: 2px solid gold; padding: 15px; margin: 15px 0; border-radius: 12px; background: #111; }
-        button { background: #28a745; color: white; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
-        .btn-reject { background: #dc3545; margin-left: 10px; }
-        img { max-width: 200px; display: block; margin: 10px 0; border: 1px solid #333; }
+        .section { border: 2px solid #333; padding: 15px; margin-bottom: 20px; border-radius: 10px; background: #050505; }
+        h2 { color: #fff; border-bottom: 1px solid gold; padding-bottom: 5px; margin-top: 0; }
+        .card { background: #111; border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; font-weight: bold; margin: 5px; }
+        .btn-rej { background: #dc3545; }
+        .btn-game { min-width: 120px; font-size: 14px; }
+        img { max-width: 150px; display: block; margin: 10px 0; border: 1px solid gold; }
+        .status-badge { color: cyan; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Master Control Panel</h1>
-    <hr border="1" color="gold">
-    <div id="deposit-requests">Loading pending deposits...</div>
+    <h1>🚀 Boom Master Control Panel</h1>
+
+    <div class="section" style="border-color: gold;">
+        <h2>🎮 Result Control (Next Round)</h2>
+        <p>Current Mode: <span id="current-setting" class="status-badge">RANDOM</span></p>
+        <button class="btn-game" style="background: #d32f2f;" onclick="setResult('tiger')">FORCE TIGER 🐯</button>
+        <button class="btn-game" style="background: #1976d2;" onclick="setResult('dragon')">FORCE DRAGON 🐉</button>
+        <button class="btn-game" style="background: #555;" onclick="setResult('random')">RANDOM 🎲</button>
+    </div>
+
+    <div class="section">
+        <h2>💰 Deposit Requests</h2>
+        <div id="deposit-list">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>💸 Withdraw Requests</h2>
+        <div id="withdraw-list">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>🛡️ KYC Approvals</h2>
+        <div id="kyc-list">Loading...</div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
@@ -26,60 +51,58 @@
             projectId: "boom-earnings",
             appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Pending Deposits ko load karne ka function
-        const depositRef = ref(db, 'deposits');
-        onValue(depositRef, (snapshot) => {
-            const container = document.getElementById('deposit-requests');
-            container.innerHTML = "";
-            const data = snapshot.val();
+        // Result Manipulation Function
+        window.setResult = async (mode) => {
+            await update(ref(db, 'gameControl'), { nextResult: mode });
+            document.getElementById('current-setting').innerText = mode.toUpperCase();
+            alert("Setting updated to: " + mode);
+        };
 
-            if(!data) {
-                container.innerHTML = "<h3>No pending deposits found in database.</h3>";
-                return;
-            }
-
-            let found = false;
-            for (let key in data) {
-                if(data[key].status === "pending") {
-                    found = true;
-                    const div = document.createElement('div');
-                    div.className = "req-card";
-                    div.innerHTML = `
-                        <p><strong>User Email:</strong> ${data[key].email}</p>
-                        <p><strong>Amount:</strong> PKR ${data[key].amount}</p>
-                        <p><strong>Screenshot:</strong></p>
-                        <a href="${data[key].screenshotUrl}" target="_blank">
-                            <img src="${data[key].screenshotUrl}" alt="Proof">
-                        </a>
-                        <button onclick="manageDeposit('${key}', '${data[key].uid}', ${data[key].amount}, 'approve')">Approve ✅</button>
-                        <button class="btn-reject" onclick="manageDeposit('${key}', '${data[key].uid}', 0, 'reject')">Reject ❌</button>
-                    `;
-                    container.appendChild(div);
-                }
-            }
-            if(!found) container.innerHTML = "<h3>All deposits are cleared!</h3>";
+        // Fetch Current Game Control Setting
+        onValue(ref(db, 'gameControl/nextResult'), (snap) => {
+            document.getElementById('current-setting').innerText = (snap.val() || "RANDOM").toUpperCase();
         });
 
-        // Approve ya Reject karne ka function
-        window.manageDeposit = async (depId, userUid, amount, action) => {
-            if(action === 'approve') {
-                const userRef = ref(db, `users/${userUid}`);
-                const userSnap = await get(userRef);
-                const currentBal = userSnap.val()?.balance || 0;
-                
-                // User ka balance update karein
-                await update(userRef, { balance: currentBal + amount });
-                // Deposit status change karein
-                await update(ref(db, `deposits/${depId}`), { status: "approved" });
-                alert("Payment Approved! Balance added to user.");
-            } else {
-                await update(ref(db, `deposits/${depId}`), { status: "rejected" });
-                alert("Deposit Rejected.");
+        // Load Deposits
+        onValue(ref(db, 'deposits'), (snap) => {
+            const list = document.getElementById('deposit-list');
+            list.innerHTML = ""; const data = snap.val();
+            if(!data) { list.innerHTML = "No pending deposits."; return; }
+            for(let key in data) if(data[key].status === 'pending') {
+                const div = document.createElement('div'); div.className = "card";
+                div.innerHTML = `<p>User: ${data[key].email} | PKR ${data[key].amount}</p>
+                    <img src="${data[key].screenshotUrl}"><button onclick="approveDep('${key}', '${data[key].uid}', ${data[key].amount})">APPROVE</button>`;
+                list.appendChild(div);
             }
+        });
+
+        window.approveDep = async (id, uid, amt) => {
+            const uRef = ref(db, `users/${uid}`); const uSnap = await get(uRef);
+            const bal = uSnap.val()?.balance || 0;
+            await update(uRef, { balance: bal + amt });
+            await update(ref(db, `deposits/${id}`), { status: "approved" });
+            alert("Deposit Added!");
+        };
+
+        // Load Withdrawals
+        onValue(ref(db, 'withdrawals'), (snap) => {
+            const list = document.getElementById('withdraw-list');
+            list.innerHTML = ""; const data = snap.val();
+            if(!data) { list.innerHTML = "No pending withdrawals."; return; }
+            for(let key in data) if(data[key].status === 'pending') {
+                const div = document.createElement('div'); div.className = "card";
+                div.innerHTML = `<p>User: ${data[key].email} | PKR ${data[key].amount}</p>
+                    <p>Wallet: ${data[key].walletAddress}</p><button onclick="approveWith('${key}')">SENT ✅</button>`;
+                list.appendChild(div);
+            }
+        });
+
+        window.approveWith = async (id) => {
+            await update(ref(db, `withdrawals/${id}`), { status: "completed" });
+            alert("Withdraw Completed!");
         };
     </script>
 </body>
