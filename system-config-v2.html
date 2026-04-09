@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Admin Master</title>
+    <title>Boom Admin Master Control</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
-        .card { background: #1a1a1a; border: 2px solid #ffcc00; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
-        h2 { color: #ffcc00; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        input, select { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
-        button { width: 100%; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; transition: 0.3s; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
+        .card { background: #111; border: 1px solid #ffcc00; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
+        h2 { color: #ffcc00; text-align: center; }
+        .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-update { background: #ffcc00; color: #000; }
-        .btn-dragon { background: #007bff; color: #fff; margin-bottom: 5px; }
-        .btn-tiger { background: #ff4444; color: #fff; margin-bottom: 5px; }
-        .btn-random { background: #666; color: #fff; }
-        .kyc-item { background: #222; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #ffcc00; }
-        .img-container { display: flex; gap: 10px; margin: 10px 0; }
-        .img-container img { width: 48%; border: 1px solid #444; border-radius: 5px; cursor: pointer; }
+        .btn-dragon { background: #007bff; color: #fff; }
+        .btn-tiger { background: #ff4444; color: #fff; }
+        .kyc-item { background: #222; padding: 10px; margin-top: 10px; border-radius: 8px; }
+        .img-grid { display: flex; gap: 10px; margin: 10px 0; }
+        .img-grid img { width: 48%; border: 1px solid #444; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -25,28 +23,25 @@
 
     <div class="card">
         <h3>💰 UPDATE DEPOSIT DETAILS</h3>
-        <label>EasyPaisa/JazzCash Number:</label>
-        <input type="text" id="admin-number" placeholder="Enter Account Number">
-        <button class="btn-update" onclick="updateDepositInfo()">UPDATE USER APP</button>
+        <input type="text" id="dep-num" placeholder="EasyPaisa/JazzCash Number" style="width:90%; padding:10px; margin-bottom:10px;">
+        <button class="btn btn-update" onclick="saveDep()">UPDATE USER APP</button>
     </div>
 
     <div class="card">
         <h3>🎮 GAME RESULT CONTROL</h3>
-        <p id="current-mode">Current Mode: Loading...</p>
-        <button class="btn-dragon" onclick="setForceWin('dragon')">DRAGON WIN</button>
-        <button class="btn-tiger" onclick="setForceWin('tiger')">TIGER WIN</button>
-        <button class="btn-random" onclick="setForceWin('random')">RANDOM MODE</button>
-        <p style="font-size: 12px; color: #aaa;">Next result will be forced to your choice.</p>
+        <button class="btn btn-dragon" onclick="force('dragon')">DRAGON WIN</button>
+        <button class="btn btn-tiger" onclick="force('tiger')">TIGER WIN</button>
+        <button class="btn" style="background:#444; color:#fff;" onclick="force('random')">RANDOM MODE</button>
     </div>
 
     <div class="card">
-        <h3>📥 PENDING KYC APPROVALS</h3>
+        <h3>📥 PENDING KYC (FRONT & BACK)</h3>
         <div id="kyc-list">Loading Requests...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
@@ -59,59 +54,49 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- 1. Deposit Update ---
-        window.updateDepositInfo = () => {
-            const num = document.getElementById('admin-number').value;
-            if(!num) return alert("Number likhein!");
-            set(ref(db, 'admin_settings/deposit_number'), num)
-            .then(() => alert("Number updated for all users!"));
+        // --- Deposit Number ---
+        window.saveDep = () => {
+            const val = document.getElementById('dep-num').value;
+            set(ref(db, 'admin/deposit_number'), val).then(() => alert("Updated!"));
         };
 
-        // --- 2. Force Win Logic ---
-        window.setForceWin = (choice) => {
-            set(ref(db, 'game_settings/next_winner'), choice)
-            .then(() => alert("Result Forced: " + choice.toUpperCase()));
+        // --- Force Win ---
+        window.force = (side) => {
+            set(ref(db, 'game_settings/next_winner'), side).then(() => alert("Forced: " + side));
         };
 
-        onValue(ref(db, 'game_settings/next_winner'), (snap) => {
-            document.getElementById('current-mode').innerText = "Current Mode: " + (snap.val() || "random").toUpperCase();
-        });
-
-        // --- 3. KYC Management (Front & Back View) ---
-        onValue(ref(db, 'kyc_submissions'), (snapshot) => {
+        // --- KYC Viewer (Dono Images) ---
+        onValue(ref(db, 'kyc_submissions'), (snap) => {
             const list = document.getElementById('kyc-list');
-            const data = snapshot.val();
-            if (!data) { list.innerHTML = "No pending requests."; return; }
+            const data = snap.val();
+            if (!data) { list.innerHTML = "No pending KYC."; return; }
 
             let html = "";
-            for (let uid in data) {
-                const kyc = data[uid];
+            for (let id in data) {
                 html += `
                     <div class="kyc-item">
-                        <p><strong>User ID:</strong> ${uid}</p>
-                        <div class="img-container">
-                            <img src="${kyc.front_id_url}" onclick="window.open(this.src)" title="Front Side">
-                            <img src="${kyc.back_id_url}" onclick="window.open(this.src)" title="Back Side">
+                        <p>User: ${id}</p>
+                        <div class="img-grid">
+                            <img src="${data[id].front_id_url}" title="Front Side">
+                            <img src="${data[id].back_id_url}" title="Back Side">
                         </div>
-                        <button class="btn-update" onclick="approveKYC('${uid}')">APPROVE ✅</button>
-                        <button style="background:#444; margin-top:5px;" onclick="rejectKYC('${uid}')">REJECT ❌</button>
+                        <button class="btn btn-update" onclick="approve('${id}')">APPROVE ✅</button>
+                        <button class="btn" style="background:red; color:white; margin-top:5px;" onclick="reject('${id}')">REJECT ❌</button>
                     </div>
                 `;
             }
             list.innerHTML = html;
         });
 
-        window.approveKYC = (uid) => {
-            update(ref(db, 'users/' + uid), { kyc_status: 'verified' })
-            .then(() => {
-                remove(ref(db, 'kyc_submissions/' + uid));
-                alert("User Verified!");
+        window.approve = (id) => {
+            update(ref(db, 'users/' + id), { kyc_status: 'verified' }).then(() => {
+                remove(ref(db, 'kyc_submissions/' + id));
+                alert("Approved!");
             });
         };
 
-        window.rejectKYC = (uid) => {
-            remove(ref(db, 'kyc_submissions/' + uid));
-            alert("Request Rejected.");
+        window.reject = (id) => {
+            remove(ref(db, 'kyc_submissions/' + id)).then(() => alert("Rejected!"));
         };
     </script>
 </body>
