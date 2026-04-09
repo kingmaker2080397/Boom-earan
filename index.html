@@ -3,140 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Dragon vs Tiger</title>
+    <title>Boom Dragon vs Tiger - Pro</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow-x: hidden; }
         
         /* Top Bar */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #111; border-bottom: 2px solid #ffcc00; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        .balance-box { font-size: 20px; font-weight: bold; color: #ffcc00; text-shadow: 0 0 5px rgba(255,204,0,0.3); }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #111; border-bottom: 2px solid #ffcc00; }
+        .balance-box { font-size: 20px; font-weight: bold; color: #ffcc00; }
 
-        /* Timer Section */
-        .game-info { margin: 25px 0; }
-        .timer { font-size: 26px; color: #ffcc00; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; display: inline-block; border: 1px solid #333; }
+        /* Game Info */
+        .timer-box { margin: 20px auto; width: 150px; padding: 10px; background: rgba(255,204,0,0.1); border: 1px solid #ffcc00; border-radius: 10px; font-weight: bold; }
 
-        /* --- LUXURY 3D BUTTONS STYLE --- */
+        /* --- 3D BUTTONS --- */
         .btn-3d {
             position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            text-transform: uppercase;
             border: none;
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.1s ease;
             box-shadow: 0 6px 0 #000;
             text-decoration: none;
-            overflow: hidden; /* For photo within button */
+            overflow: hidden;
         }
-        .btn-3d:active {
-            transform: translateY(4px);
-            box-shadow: 0 2px 0 #000 !important;
-        }
+        .btn-3d:active { transform: translateY(4px); box-shadow: 0 2px 0 #000 !important; }
 
-        /* 1 & 2: Main Game Buttons (Big 3D with Photos) */
+        /* Dragon & Tiger Main Buttons */
         .game-container { display: flex; justify-content: center; gap: 20px; padding: 20px; }
-        .btn-main { width: 140px; height: 140px; font-size: 18px; color: #fff; }
+        .btn-main { width: 140px; height: 160px; flex-direction: column; }
+        .btn-dragon { background: linear-gradient(145deg, #ff4b2b, #ff416c); box-shadow: 0 8px 0 #b32a15; }
+        .btn-tiger { background: linear-gradient(145deg, #4b6cb7, #182848); box-shadow: 0 8px 0 #2a3d6d; }
         
-        /* Dragon Button with Photo */
-        .btn-dragon { 
-            background: linear-gradient(145deg, #ff4b2b, #ff416c); 
-            box-shadow: 0 8px 0 #b32a15; 
-            background-image: url('dragon_photo.png'); /* Replace with your dragon image filename */
-            background-size: cover; 
-            background-position: center; 
-            color: transparent; /* Hide text if photo has text */
+        .char-img { width: 80px; height: 80px; margin-bottom: 10px; object-fit: contain; }
+        .card-val { font-size: 24px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; margin-top: 5px; }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: #111; padding: 10px 0; border-top: 1px solid #333; }
+        .btn-nav { flex: 1; margin: 0 5px; padding: 12px; font-size: 14px; color: #fff; background: #222; box-shadow: 0 4px 0 #000; }
+
+        /* --- PROFESSIONAL POP-UP --- */
+        #game-popup {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 300px;
+            background: #1a1a1a;
+            border: 3px solid #ffcc00;
+            border-radius: 20px;
+            padding: 20px;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
+        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0.5); } to { transform: translate(-50%, -50%) scale(1); } }
         
-        /* Tiger Button with Photo */
-        .btn-tiger { 
-            background: linear-gradient(145deg, #4b6cb7, #182848); 
-            box-shadow: 0 8px 0 #2a3d6d; 
-            background-image: url('tiger_photo.png'); /* Replace with your tiger image filename */
-            background-size: cover; 
-            background-position: center; 
-            color: transparent; /* Hide text if photo has text */
-        }
-
-        /* 3: My Profile Button */
-        .btn-profile { background: linear-gradient(145deg, #ffcc00, #d4aa00); color: #000; padding: 10px 20px; box-shadow: 0 5px 0 #997a00; border-radius: 30px; font-size: 14px; }
-
-        /* Bottom Nav Buttons (4, 5, 6) */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: #111; padding: 10px 0; border-top: 1px solid #333; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); }
-        .btn-nav { flex: 1; margin: 0 5px; padding: 12px; font-size: 14px; color: #fff; background: #222; box-shadow: 0 4px 0 #000; text-transform: none; }
-        .btn-nav.active { background: #333; border: 1px solid #ffcc00; }
-
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
+        .win-text { font-size: 28px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; }
+        .lose-text { font-size: 28px; font-weight: bold; color: #ff4444; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
+    <div class="overlay" id="overlay"></div>
+    <div id="game-popup">
+        <div id="result-title" class="win-text">YOU WIN!</div>
+        <p id="result-msg" style="font-size: 18px;">Reward: PKR 200</p>
+        <button class="btn-3d" style="background: #ffcc00; color: #000; padding: 10px 30px;" onclick="closePopup()">OKAY</button>
+    </div>
+
     <div class="top-bar">
         <div class="balance-box">💰 <span id="user-balance">0</span></div>
-        <button class="btn-3d btn-profile" onclick="window.location.href='profile.html'">MY PROFILE 👤</button>
+        <button class="btn-3d" style="background:#ffcc00; color:#000; padding:8px 15px; border-radius:30px;" onclick="window.location.href='profile.html'">MY PROFILE 👤</button>
     </div>
 
     <div class="game-info">
         <h1 style="color:#ff4b2b">DRAGON <span style="color:#fff">VS</span> <span style="color:#4b6cb7">TIGER</span></h1>
-        <div class="timer">Next Round: <span id="time-left">00:15</span></div>
+        <div class="timer-box">Next Round: <span id="time-left">00:15</span></div>
     </div>
 
     <div class="game-container">
-        <button class="btn-3d btn-main btn-dragon" onclick="placeBet('dragon')">DRAGON</button>
-        <button class="btn-3d btn-main btn-tiger" onclick="placeBet('tiger')">TIGER</button>
+        <button class="btn-3d btn-main btn-dragon" onclick="placeBet('dragon')">
+            <img src="dragon_photo.png" class="char-img" alt="Dragon">
+            <span>DRAGON</span>
+            <div class="card-val" id="d-val">?</div>
+        </button>
+
+        <button class="btn-3d btn-main btn-tiger" onclick="placeBet('tiger')">
+            <img src="tiger_photo.png" class="char-img" alt="Tiger">
+            <span>TIGER</span>
+            <div class="card-val" id="t-val">?</div>
+        </button>
     </div>
 
     <div class="bottom-nav">
-        <button class="btn-3d btn-nav active" onclick="window.location.href='index.html'">🏠 Home</button>
+        <button class="btn-3d btn-nav" onclick="window.location.href='index.html'" style="border: 1px solid #ffcc00;">🏠 Home</button>
         <button class="btn-3d btn-nav" onclick="window.location.href='deposit.html'">💵 Deposit</button>
         <button class="btn-3d btn-nav" onclick="window.location.href='withdraw.html'">🏦 Withdraw</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-            authDomain: "boom-earnings.firebaseapp.com",
-            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-            projectId: "boom-earnings",
-            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        // Balance Display
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                onValue(ref(db, 'users/' + user.uid + '/balance'), (snap) => {
-                    document.getElementById('user-balance').innerText = snap.val() || 0;
-                });
-            }
-        });
+        let userBet = null;
+        let betAmount = 0;
 
-        // Simple Timer Logic
+        // Timer and Game Logic
         let seconds = 15;
         setInterval(() => {
             seconds--;
-            if(seconds < 0) seconds = 15;
+            if (seconds === 0) {
+                showResult();
+            }
+            if (seconds < 0) {
+                seconds = 15;
+                resetGame();
+            }
             document.getElementById('time-left').innerText = "00:" + (seconds < 10 ? "0" + seconds : seconds);
         }, 1000);
 
-        window.placeBet = (side) => {
-            // Check if user is logged in
-            if (!auth.currentUser) {
-                alert("Pehle login karein, Sain!");
-                window.location.href = 'login.html';
-                return;
+        function showResult() {
+            // Random numbering (Professional logic)
+            const dNum = Math.floor(Math.random() * 13) + 1;
+            const tNum = Math.floor(Math.random() * 13) + 1;
+            
+            document.getElementById('d-val').innerText = dNum;
+            document.getElementById('t-val').innerText = tNum;
+
+            const winner = dNum > tNum ? 'dragon' : 'tiger';
+            
+            if (userBet) {
+                const isWin = userBet === winner;
+                const title = document.getElementById('result-title');
+                const msg = document.getElementById('result-msg');
+                
+                if (isWin) {
+                    title.innerText = "YOU WIN! 🎉";
+                    title.className = "win-text";
+                    msg.innerText = "Mubarak ho! Win Amount: " + (betAmount * 2);
+                } else {
+                    title.innerText = "YOU LOSE! ❌";
+                    title.className = "lose-text";
+                    msg.innerText = "Behtar koshish agli baar!";
+                }
+                
+                document.getElementById('overlay').style.display = 'block';
+                document.getElementById('game-popup').style.display = 'block';
             }
-            alert("Bet Placed on " + side.toUpperCase() + "! Good Luck Sain.");
-            // You'll need more complex logic here to handle balance deduction, etc.
+        }
+
+        window.placeBet = (side) => {
+            if(seconds < 3) return; // Last 3 seconds no bet
+            userBet = side;
+            betAmount = 100; // Example amount
+            alert("Bet Placed on " + side.toUpperCase());
         };
+
+        window.closePopup = () => {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('game-popup').style.display = 'none';
+        };
+
+        function resetGame() {
+            userBet = null;
+            document.getElementById('d-val').innerText = "?";
+            document.getElementById('t-val').innerText = "?";
+        }
+
+        // Live Balance
+        onValue(ref(db, 'users/' + auth.currentUser?.uid + '/balance'), (snap) => {
+            document.getElementById('user-balance').innerText = snap.val() || 0;
+        });
     </script>
 </body>
 </html>
