@@ -68,5 +68,21 @@
             try {
                 let formData = new FormData();
                 formData.append("image", file);
-                const res = await fetch(
-        
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: formData });
+                const data = await res.json();
+                const photoUrl = data.data.url;
+
+                await set(ref(db, 'kyc_requests/' + user.uid), {
+                    uid: user.uid,
+                    name: name,
+                    idPhoto: photoUrl,
+                    status: "pending",
+                    email: user.email
+                });
+
+                Swal.fire("Success", "KYC Submitted!", "success").then(() => location.href='index.html');
+            } catch (e) { Swal.fire("Error", "Upload failed", "error"); }
+        };
+    </script>
+</body>
+</html>
