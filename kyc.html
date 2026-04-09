@@ -1,59 +1,98 @@
-// --- MUKAMMAL KYC UPLOAD SYSTEM ---
-async function uploadKYC() {
-    const frontImg = document.getElementById('id-front').files[0];
-    const backImg = document.getElementById('id-back').files[0];
-    
-    // Aapki ImgBB API Key
-    const apiKey = "a25b5bea8eb38a1ecf4f04154d85a4bf"; 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KYC Verification - Boom Earning</title>
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .kyc-card { background: #111; border: 1px solid #ffcc00; border-radius: 15px; padding: 20px; max-width: 400px; margin: auto; }
+        input[type="file"] { margin: 15px 0; background: #222; color: #fff; padding: 10px; width: 90%; border-radius: 5px; }
+        .btn-upload { background: #ffcc00; color: #000; border: none; padding: 12px 20px; width: 100%; font-weight: bold; border-radius: 5px; cursor: pointer; }
+        .btn-back { background: #333; color: #fff; text-decoration: none; display: inline-block; margin-top: 15px; padding: 10px; border-radius: 5px; width: 95%; }
+    </style>
+</head>
+<body>
 
-    if (!frontImg || !backImg) {
-        alert("Sain, ID Card ki Front aur Back dono photos select karein!");
-        return;
-    }
+    <div class="kyc-card">
+        <h2 style="color: #ffcc00;">🆔 ID VERIFICATION</h2>
+        <p>Upload clear photos of your ID Card (Front & Back)</p>
 
-    // imgBB par upload karne wala function
-    async function uploadToImgBB(file) {
-        const formData = new FormData();
-        formData.append("image", file);
-        
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-            method: "POST",
-            body: formData
-        });
-        const resData = await response.json();
-        if (resData.success) {
-            return resData.data.url; // Photo ka link milega
-        } else {
-            throw new Error("ImgBB Upload Failed");
-        }
-    }
+        <label>ID Card Front Side:</label>
+        <input type="file" id="id-front" accept="image/*">
 
-    try {
-        alert("Uploading... Thora sabar karein, images server par ja rahi hain.");
+        <label>ID Card Back Side:</label>
+        <input type="file" id="id-back" accept="image/*">
 
-        // 1. Pehle Front Photo upload hogi
-        const frontUrl = await uploadToImgBB(frontImg);
-        // 2. Phir Back Photo upload hogi
-        const backUrl = await uploadToImgBB(backImg);
+        <button class="btn-upload" onclick="uploadKYC()">SUBMIT DOCUMENTS</button>
+        <a href="profile.html" class="btn-back">⬅️ BACK TO PROFILE</a>
+    </div>
 
-        const user = auth.currentUser;
-        if (!user) { alert("Pehle login karein!"); return; }
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-        // 3. Firebase Database mein Links save karna
-        const kycRef = ref(db, 'kyc_submissions/' + user.uid);
-        await set(kycRef, {
-            uid: user.uid,
-            front_id_url: frontUrl, 
-            back_id_url: backUrl,
-            status: "pending",
-            submitted_at: Date.now()
-        });
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
 
-        alert("Mubarak ho! Dono photos upload ho gayi hain. Admin jald check karega.");
-        window.location.href = "profile.html";
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
 
-    } catch (error) {
-        console.error(error);
-        alert("Ghalati: Photo upload nahi hui. Check karein internet sahi hai?");
-    }
-}
+        window.uploadKYC = async function() {
+            const frontImg = document.getElementById('id-front').files[0];
+            const backImg = document.getElementById('id-back').files[0];
+            const apiKey = "a25b5bea8eb38a1ecf4f04154d85a4bf"; // Aapki sahi ImgBB Key
+
+            if (!frontImg || !backImg) {
+                alert("Sain, ID Card ki Front aur Back dono photos select karein!");
+                return;
+            }
+
+            async function uploadToImgBB(file) {
+                const formData = new FormData();
+                formData.append("image", file);
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+                    method: "POST",
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) return resData.data.url;
+                else throw new Error("Upload Failed");
+            }
+
+            try {
+                alert("Uploading... Thora sabar karein, images server par ja rahi hain.");
+                const frontUrl = await uploadToImgBB(frontImg);
+                const backUrl = await uploadToImgBB(backImg);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        const kycRef = ref(db, 'kyc_submissions/' + user.uid);
+                        await set(kycRef, {
+                            uid: user.uid,
+                            front_id_url: frontUrl,
+                            back_id_url: backUrl,
+                            status: "pending",
+                            submitted_at: Date.now()
+                        });
+                        alert("Mubarak ho! Dono photos upload ho gayi hain.");
+                        window.location.href = "profile.html";
+                    } else {
+                        alert("Pehle login karein!");
+                    }
+                });
+            } catch (error) {
+                console.error(error);
+                alert("Ghalati: Photo upload nahi hui. Internet check karein.");
+            }
+        };
+    </script>
+</body>
+</html>
