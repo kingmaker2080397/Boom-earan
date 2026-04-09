@@ -1,38 +1,41 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Boom</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>My Profile</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .card { background: #111; border: 2px solid #ffcc00; border-radius: 20px; padding: 30px; max-width: 400px; margin: auto; }
-        .user-pic { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #ffcc00; object-fit: cover; }
-        .badge { font-weight: bold; font-size: 18px; margin: 15px 0; color: #ff4444; }
-        .stats { background: #222; padding: 15px; border-radius: 10px; text-align: left; margin: 20px 0; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; background: #ffcc00; color: #000; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .card { width: 90%; max-width: 400px; padding: 30px; border-radius: 25px; background: #1a1a1a; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+        .p-img { width: 100px; height: 100px; border-radius: 50%; border: 4px solid #ffcc00; margin-bottom: 15px; object-fit: cover; }
+        .status-badge { font-size: 0.8rem; padding: 5px 12px; border-radius: 20px; background: rgba(255,0,0,0.1); display: inline-block; margin-bottom: 20px; }
+        .balance-card { background: #222; padding: 20px; border-radius: 15px; margin: 20px 0; border-left: 5px solid #ffcc00; }
+        .btn { display: block; width: 100%; padding: 14px; margin: 12px 0; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; text-decoration: none; box-sizing: border-box; transition: 0.2s; }
+        .btn-gold { background: #ffcc00; color: #000; }
+        .btn-dark { background: #333; color: #fff; }
+        .btn:hover { opacity: 0.9; transform: scale(1.02); }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <img id="u-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-pic">
-        <div id="u-badge" class="badge">Status: Not Verified</div>
-
-        <div class="stats">
-            <p>💰 Balance: <b id="u-balance" style="color:#ffcc00">PKR 0</b></p>
-            <p>📧 Email: <span id="u-email">...</span></p>
+        <img id="u-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="p-img">
+        <h2 id="u-name" style="margin: 5px 0;">Loading...</h2>
+        <div id="u-badge" class="status-badge" style="color:#ff4444">KYC Pending</div>
+        
+        <div class="balance-card">
+            <span style="color: #aaa; font-size: 0.9rem;">Total Balance</span>
+            <div id="u-balance" style="color:#ffcc00; font-size: 1.8rem; font-weight: bold; margin-top: 5px;">PKR 0</div>
         </div>
 
-        <button onclick="location.href='index.html'">BACK TO GAME</button>
-        <button onclick="auth.signOut().then(()=>location.href='login.html')" style="background:#ff4444; color:#fff;">LOGOUT</button>
+        <a href="kyc.html" class="btn btn-gold">🛡️ VERIFY KYC</a>
+        <a href="wallet.html" class="btn btn-gold">💳 WITHDRAW FUNDS</a>
+        <a href="index.html" class="btn btn-dark">🔙 BACK TO GAME</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
         import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
@@ -43,24 +46,26 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getDatabase(app);
+        const auth = getAuth(app);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                document.getElementById('u-email').innerText = user.email;
                 onValue(ref(db, 'users/' + user.uid), (snap) => {
                     const data = snap.val();
                     if (data) {
+                        document.getElementById('u-name').innerText = data.name || "Player";
                         document.getElementById('u-balance').innerText = "PKR " + (data.balance || 0);
                         document.getElementById('u-pic').src = data.profilePic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                         if (data.kycStatus === "verified") {
-                            document.getElementById('u-badge').innerHTML = "Verified Member ✅";
-                            document.getElementById('u-badge').style.color = "#00ff00";
+                            const badge = document.getElementById('u-badge');
+                            badge.innerText = "Verified Member ✅";
+                            badge.style.color = "#00ff00";
+                            badge.style.background = "rgba(0,255,0,0.1)";
                         }
                     }
                 });
-            } else { window.location.href = 'login.html'; }
+            } else { location.href = 'login.html'; }
         });
     </script>
 </body>
