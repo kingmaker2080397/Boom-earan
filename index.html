@@ -3,68 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Boom - Sher vs Dragon</title>
+    <title>Boom Earnings - Professional</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; overflow: hidden; }
-        .header { display: flex; justify-content: space-between; padding: 12px; background: #111; border-bottom: 2px solid gold; }
-        .balance-box { color: gold; font-weight: bold; font-size: 20px; }
-        .timer-circle { font-size: 35px; color: gold; border: 4px solid gold; display: inline-block; width: 75px; height: 75px; line-height: 65px; border-radius: 50%; margin: 10px; background: #111; }
+        :root { --gold: #ffcc00; --red: #ff3333; --blue: #3385ff; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; margin: 0; overflow-x: hidden; }
+        .top-bar { display: flex; justify-content: space-between; padding: 15px; background: rgba(20,20,20,0.9); border-bottom: 2px solid var(--gold); backdrop-filter: blur(10px); }
+        .balance-chip { background: #1a1a1a; padding: 8px 15px; border-radius: 50px; border: 1px solid var(--gold); color: var(--gold); font-weight: bold; }
         
-        /* Fake Patti Animation */
-        .card-anim { width: 50px; height: 70px; background: gold; border: 2px solid white; border-radius: 5px; position: absolute; top: -100px; transition: 1s ease-in-out; z-index: 10; font-size: 30px; }
-        .patti-active { top: 200px !important; }
+        /* Game Table */
+        .game-area { padding: 20px; position: relative; }
+        .timer-display { font-size: 48px; font-weight: 800; color: var(--gold); text-shadow: 0 0 15px rgba(255,204,0,0.5); margin: 10px 0; }
+        
+        .versus-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
+        .fighter-box { width: 40%; transition: transform 0.3s; }
+        .fighter-box img { width: 100%; max-width: 140px; filter: drop-shadow(0 0 10px rgba(255,255,255,0.2)); }
+        
+        /* Card Flip Animation */
+        .card-slot { perspective: 1000px; margin-top: 15px; }
+        .card-inner { width: 80px; height: 110px; transition: transform 0.6s; transform-style: preserve-3d; position: relative; margin: auto; }
+        .card-inner.flipped { transform: rotateY(180deg); }
+        .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; border: 2px solid var(--gold); }
+        .card-front { background: linear-gradient(45deg, #222, #444); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        .card-back { background: #fff; transform: rotateY(180deg); display: flex; align-items: center; justify-content: center; color: #000; font-weight: bold; }
 
-        .cards-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
-        .card-box img { width: 130px; height: 130px; object-fit: contain; }
+        /* Action Buttons */
+        .bet-input-wrap { margin: 20px 0; }
+        #bet-amount { background: #111; border: 2px solid var(--gold); color: var(--gold); padding: 12px; width: 120px; border-radius: 10px; font-size: 18px; text-align: center; }
         
-        .bet-buttons { display: flex; justify-content: center; gap: 15px; margin: 15px; }
-        .btn { padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; width: 140px; font-size: 16px; color: #fff; }
-        .btn-tiger { background: linear-gradient(#ff4444, #8b0000); }
-        .btn-dragon { background: linear-gradient(#4444ff, #0d47a1); }
-        
-        .nav-footer { background: #111; padding: 15px; position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; border-top: 1px solid gold; }
-        .nav-footer button { background: none; border: 1px solid gold; color: gold; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .btn-grid { display: flex; justify-content: center; gap: 15px; padding: 0 10px; }
+        .bet-btn { flex: 1; padding: 15px; border: none; border-radius: 12px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; color: #fff; text-transform: uppercase; }
+        .btn-tiger { background: linear-gradient(to bottom, #ff3333, #990000); box-shadow: 0 5px #660000; }
+        .btn-dragon { background: linear-gradient(to bottom, #3385ff, #0047b3); box-shadow: 0 5px #002b66; }
+        .bet-btn:active { transform: translateY(4px); box-shadow: none; }
+
+        /* Footer Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #111; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
+        .nav-item { color: #888; text-decoration: none; font-size: 12px; font-weight: bold; }
+        .nav-item.active { color: var(--gold); }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div id="display-email">Player</div>
-        <div class="balance-box">💰 <span id="balance">0</span></div>
+    <div class="top-bar">
+        <div style="font-weight: 900; color: var(--gold); letter-spacing: 1px;">BOOM 🚀</div>
+        <div class="balance-chip">PKR <span id="balance">0</span></div>
     </div>
 
-    <div id="patti-tiger" class="card-anim" style="left: 20%;">🎴</div>
-    <div id="patti-dragon" class="card-anim" style="right: 20%;">🎴</div>
+    <div class="game-area">
+        <div class="timer-display" id="timer">15</div>
+        <div id="status" style="color: #00ffcc; font-weight: bold;">Betting Open</div>
 
-    <div class="timer-circle" id="timer">15</div>
-    <div id="result-display" style="font-size: 20px; color: cyan; font-weight: bold;">Betting Open...</div>
+        <div class="versus-container">
+            <div class="fighter-box">
+                <img src="https://www.pngplay.com/wp-content/uploads/12/Tiger-Logo-PNG-Clipart-Background.png" alt="Tiger">
+                <div class="card-slot">
+                    <div id="card-tiger" class="card-inner">
+                        <div class="card-front">?</div>
+                        <div class="card-back">A</div>
+                    </div>
+                </div>
+                <p style="color:var(--red); font-weight:bold;">TIGER</p>
+            </div>
 
-    <div class="cards-container">
-        <div class="card-box">
-            <img src="https://www.pngmart.com/files/22/Tiger-Logo-PNG-Image.png" alt="Sher">
-            <h3 style="color:red;">SHER (TIGER)</h3>
+            <div style="font-size: 24px; color: var(--gold); font-weight: 900;">VS</div>
+
+            <div class="fighter-box">
+                <img src="https://img.icons8.com/color/200/dragon.png" alt="Dragon">
+                <div class="card-slot">
+                    <div id="card-dragon" class="card-inner">
+                        <div class="card-front">?</div>
+                        <div class="card-back">K</div>
+                    </div>
+                </div>
+                <p style="color:var(--blue); font-weight:bold;">DRAGON</p>
+            </div>
         </div>
-        <div style="font-size: 30px; color: gold;">VS</div>
-        <div class="card-box">
-            <img src="https://img.icons8.com/color/200/dragon.png" alt="Dragon">
-            <h3 style="color:blue;">DRAGON</h3>
+
+        <div class="bet-input-wrap">
+            <input type="number" id="bet-amount" value="100" min="10">
+        </div>
+
+        <div class="btn-grid">
+            <button class="bet-btn btn-tiger" onclick="placeBet('tiger')">BET TIGER</button>
+            <button class="bet-btn btn-dragon" onclick="placeBet('dragon')">BET DRAGON</button>
         </div>
     </div>
 
-    <input type="number" id="bet-amount" value="100" style="padding:10px; width:120px; background:#111; color:gold; border:1px solid gold; text-align:center; border-radius:5px;">
-    
-    <div class="bet-buttons">
-        <button class="btn btn-tiger" onclick="placeBet('tiger')">BET SHER</button>
-        <button class="btn btn-dragon" onclick="placeBet('dragon')">BET DRAGON</button>
-    </div>
-
-    <div class="nav-footer">
-        <button onclick="location.href='deposit.html'">DEPOSIT</button>
-        <button onclick="location.href='withdraw.html'">WITHDRAW</button>
-        <button onclick="location.href='ladder.html'">LEADERBOARD</button>
-        <button onclick="location.href='kyc.html'">KYC</button>
+    <div class="bottom-nav">
+        <a href="deposit.html" class="nav-item">DEPOSIT</a>
+        <a href="withdraw.html" class="nav-item">WITHDRAW</a>
+        <a href="ladder.html" class="nav-item">LADDER</a>
+        <a href="kyc.html" class="nav-item">KYC</a>
     </div>
 
     <script type="module" src="main.js"></script>
