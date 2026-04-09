@@ -1,63 +1,59 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KYC Verification</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .box { width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; background: #111; border: 1px solid #ffcc00; text-align: center; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: #fff; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; background: #ffcc00; color: #000; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; }
-    </style>
-</head>
-<body>
-    <div class="box">
-        <h2>🛡️ KYC Verification</h2>
-        <input type="text" id="full-name" placeholder="Full Name (As per ID)">
-        <input type="file" id="file-id" accept="image/*">
-        <button class="btn" onclick="submitKYC()">SUBMIT DOCUMENT</button>
-        <br><a href="profile.html" style="color:#777; text-decoration:none; font-size:0.8rem;">Cancel</a>
-    </div>
+// --- MUKAMMAL KYC UPLOAD SYSTEM ---
+async function uploadKYC() {
+    const frontImg = document.getElementById('id-front').files[0];
+    const backImg = document.getElementById('id-back').files[0];
+    
+    // Aapki ImgBB API Key
+    const apiKey = "a25b5bea8eb38a1ecf4f04154d85a4bf"; 
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+    if (!frontImg || !backImg) {
+        alert("Sain, ID Card ki Front aur Back dono photos select karein!");
+        return;
+    }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-            authDomain: "boom-earnings.firebaseapp.com",
-            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-            projectId: "boom-earnings",
-            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const auth = getAuth(app);
-        const IMGBB_KEY = "a25b5bea8eb38a1ecf404154d85a4bf";
+    // imgBB par upload karne wala function
+    async function uploadToImgBB(file) {
+        const formData = new FormData();
+        formData.append("image", file);
+        
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: "POST",
+            body: formData
+        });
+        const resData = await response.json();
+        if (resData.success) {
+            return resData.data.url; // Photo ka link milega
+        } else {
+            throw new Error("ImgBB Upload Failed");
+        }
+    }
 
-        window.submitKYC = async () => {
-            const name = document.getElementById('full-name').value;
-            const file = document.getElementById('file-id').files[0];
-            if (!name || !file) return Swal.fire("Error", "Fill all fields", "error");
+    try {
+        alert("Uploading... Thora sabar karein, images server par ja rahi hain.");
 
-            Swal.fire({title: 'Uploading...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-            try {
-                let fd = new FormData(); fd.append("image", file);
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: fd });
-                const d = await res.json();
-                
-                await set(ref(db, 'kyc_requests/' + auth.currentUser.uid), {
-                    uid: auth.currentUser.uid,
-                    name: name,
-                    idPhoto: d.data.url,
-                    status: "pending"
-                });
-                Swal.fire("Success", "KYC Submitted!", "success").then(() => location.href='profile.html');
-            } catch (e) { Swal.fire("Error", "Failed", "error"); }
-        };
-    </script>
-</body>
-</html>
+        // 1. Pehle Front Photo upload hogi
+        const frontUrl = await uploadToImgBB(frontImg);
+        // 2. Phir Back Photo upload hogi
+        const backUrl = await uploadToImgBB(backImg);
+
+        const user = auth.currentUser;
+        if (!user) { alert("Pehle login karein!"); return; }
+
+        // 3. Firebase Database mein Links save karna
+        const kycRef = ref(db, 'kyc_submissions/' + user.uid);
+        await set(kycRef, {
+            uid: user.uid,
+            front_id_url: frontUrl, 
+            back_id_url: backUrl,
+            status: "pending",
+            submitted_at: Date.now()
+        });
+
+        alert("Mubarak ho! Dono photos upload ho gayi hain. Admin jald check karega.");
+        window.location.href = "profile.html";
+
+    } catch (error) {
+        console.error(error);
+        alert("Ghalati: Photo upload nahi hui. Check karein internet sahi hai?");
+    }
+}
