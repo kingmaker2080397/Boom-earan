@@ -3,112 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Dragon vs Tiger - Pro</title>
+    <title>Boom Dragon vs Tiger - Professional</title>
     <style>
-        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow-x: hidden; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; overflow: hidden; }
         
         /* Top Bar */
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #111; border-bottom: 2px solid #ffcc00; }
         .balance-box { font-size: 20px; font-weight: bold; color: #ffcc00; }
 
-        /* Game Info */
-        .timer-box { margin: 20px auto; width: 150px; padding: 10px; background: rgba(255,204,0,0.1); border: 1px solid #ffcc00; border-radius: 10px; font-weight: bold; }
+        /* Timer Section */
+        .timer-container { margin: 20px auto; width: 160px; padding: 10px; background: #1a1a1a; border: 1px solid #ffcc00; border-radius: 12px; }
+        #time-left { font-size: 24px; color: #ffcc00; font-weight: 900; }
 
-        /* --- 3D BUTTONS --- */
+        /* 3D LUXURY BUTTONS */
+        .game-container { display: flex; justify-content: center; gap: 15px; padding: 10px; }
         .btn-3d {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            box-shadow: 0 6px 0 #000;
-            text-decoration: none;
-            overflow: hidden;
+            position: relative; width: 150px; height: 180px;
+            border-radius: 20px; border: none; cursor: pointer;
+            transition: all 0.1s ease; box-shadow: 0 8px 0 #000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .btn-3d:active { transform: translateY(4px); box-shadow: 0 2px 0 #000 !important; }
-
-        /* Dragon & Tiger Main Buttons */
-        .game-container { display: flex; justify-content: center; gap: 20px; padding: 20px; }
-        .btn-main { width: 140px; height: 160px; flex-direction: column; }
-        .btn-dragon { background: linear-gradient(145deg, #ff4b2b, #ff416c); box-shadow: 0 8px 0 #b32a15; }
-        .btn-tiger { background: linear-gradient(145deg, #4b6cb7, #182848); box-shadow: 0 8px 0 #2a3d6d; }
+        .btn-3d:active { transform: translateY(4px); box-shadow: 0 2px 0 #000; }
         
-        .char-img { width: 80px; height: 80px; margin-bottom: 10px; object-fit: contain; }
-        .card-val { font-size: 24px; background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 5px; margin-top: 5px; }
+        .btn-dragon { background: linear-gradient(145deg, #ff4b2b, #ff416c); }
+        .btn-tiger { background: linear-gradient(145deg, #4b6cb7, #182848); }
+        
+        .char-img { width: 90px; height: 90px; object-fit: contain; margin-bottom: 10px; }
+        .bet-indicator { font-size: 12px; background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 20px; display: none; }
+
+        /* Result Popup */
+        #popup {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 85%; max-width: 320px; background: #1a1a1a; border: 3px solid #ffcc00;
+            border-radius: 25px; padding: 25px; z-index: 1000; box-shadow: 0 0 50px #000;
+        }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; }
 
         /* Bottom Nav */
-        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: #111; padding: 10px 0; border-top: 1px solid #333; }
-        .btn-nav { flex: 1; margin: 0 5px; padding: 12px; font-size: 14px; color: #fff; background: #222; box-shadow: 0 4px 0 #000; }
-
-        /* --- PROFESSIONAL POP-UP --- */
-        #game-popup {
-            display: none;
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-width: 300px;
-            background: #1a1a1a;
-            border: 3px solid #ffcc00;
-            border-radius: 20px;
-            padding: 20px;
-            z-index: 1000;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        @keyframes popIn { from { transform: translate(-50%, -50%) scale(0.5); } to { transform: translate(-50%, -50%) scale(1); } }
-        
-        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; }
-        .win-text { font-size: 28px; font-weight: bold; color: #ffcc00; margin-bottom: 10px; }
-        .lose-text { font-size: 28px; font-weight: bold; color: #ff4444; margin-bottom: 10px; }
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; background: #111; padding: 12px 0; }
+        .nav-item { flex: 1; color: #888; text-decoration: none; font-size: 13px; }
+        .nav-item.active { color: #ffcc00; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="overlay" id="overlay"></div>
-    <div id="game-popup">
-        <div id="result-title" class="win-text">YOU WIN!</div>
-        <p id="result-msg" style="font-size: 18px;">Reward: PKR 200</p>
-        <button class="btn-3d" style="background: #ffcc00; color: #000; padding: 10px 30px;" onclick="closePopup()">OKAY</button>
+    <div id="popup">
+        <h2 id="res-status" style="font-size: 30px; margin: 0;"></h2>
+        <p id="res-desc" style="font-size: 18px; color: #ccc;"></p>
+        <div style="font-size: 40px; margin: 15px 0;" id="res-nums">0 vs 0</div>
+        <button onclick="closePop()" style="background:#ffcc00; border:none; padding:12px 40px; border-radius:10px; font-weight:bold; cursor:pointer;">CONTINUE</button>
     </div>
 
     <div class="top-bar">
-        <div class="balance-box">💰 <span id="user-balance">0</span></div>
-        <button class="btn-3d" style="background:#ffcc00; color:#000; padding:8px 15px; border-radius:30px;" onclick="window.location.href='profile.html'">MY PROFILE 👤</button>
+        <div class="balance-box">💰 PKR <span id="balance">0</span></div>
+        <button onclick="location.href='profile.html'" style="background:#ffcc00; border:none; padding:8px 15px; border-radius:20px; font-weight:bold;">PROFILE 👤</button>
     </div>
 
     <div class="game-info">
-        <h1 style="color:#ff4b2b">DRAGON <span style="color:#fff">VS</span> <span style="color:#4b6cb7">TIGER</span></h1>
-        <div class="timer-box">Next Round: <span id="time-left">00:15</span></div>
+        <h2 style="color:#ffcc00; letter-spacing: 2px;">DRAGON vs TIGER</h2>
+        <div class="timer-container">
+            <div style="font-size: 12px; color: #888;">NEXT ROUND</div>
+            <div id="time-left">00:15</div>
+        </div>
     </div>
 
     <div class="game-container">
-        <button class="btn-3d btn-main btn-dragon" onclick="placeBet('dragon')">
-            <img src="dragon_photo.png" class="char-img" alt="Dragon">
-            <span>DRAGON</span>
-            <div class="card-val" id="d-val">?</div>
+        <button class="btn-3d btn-dragon" onclick="handleBet('dragon')">
+            <img src="dragon_photo.png" class="char-img">
+            <span style="font-weight:bold; font-size:18px;">DRAGON</span>
+            <div id="d-bet-tag" class="bet-indicator">BET PLACED</div>
         </button>
 
-        <button class="btn-3d btn-main btn-tiger" onclick="placeBet('tiger')">
-            <img src="tiger_photo.png" class="char-img" alt="Tiger">
-            <span>TIGER</span>
-            <div class="card-val" id="t-val">?</div>
+        <button class="btn-3d btn-tiger" onclick="handleBet('tiger')">
+            <img src="tiger_photo.png" class="char-img">
+            <span style="font-weight:bold; font-size:18px;">TIGER</span>
+            <div id="t-bet-tag" class="bet-indicator">BET PLACED</div>
         </button>
     </div>
 
     <div class="bottom-nav">
-        <button class="btn-3d btn-nav" onclick="window.location.href='index.html'" style="border: 1px solid #ffcc00;">🏠 Home</button>
-        <button class="btn-3d btn-nav" onclick="window.location.href='deposit.html'">💵 Deposit</button>
-        <button class="btn-3d btn-nav" onclick="window.location.href='withdraw.html'">🏦 Withdraw</button>
+        <a href="index.html" class="nav-item active">🏠<br>Home</a>
+        <a href="deposit.html" class="nav-item">💵<br>Deposit</a>
+        <a href="withdraw.html" class="nav-item">🏦<br>Withdraw</a>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, get, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -119,75 +101,85 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
-        let userBet = null;
-        let betAmount = 0;
+        let currentBalance = 0;
+        let selectedSide = null;
+        const betAmount = 100; // Fixed bet amount for testing
 
-        // Timer and Game Logic
-        let seconds = 15;
-        setInterval(() => {
-            seconds--;
-            if (seconds === 0) {
-                showResult();
+        // 1. Load Real-time Balance
+        onValue(ref(db, 'users/' + auth.currentUser?.uid), (snap) => {
+            if(snap.exists()) {
+                currentBalance = snap.val().balance || 0;
+                document.getElementById('balance').innerText = currentBalance;
             }
-            if (seconds < 0) {
-                seconds = 15;
-                resetGame();
+        });
+
+        // 2. Bet Handling with Balance Check
+        window.handleBet = async (side) => {
+            if (currentBalance < betAmount) {
+                alert("Sain, balance kam hai! Pehle deposit karein.");
+                return;
             }
-            document.getElementById('time-left').innerText = "00:" + (seconds < 10 ? "0" + seconds : seconds);
+            if (selectedSide) return; // Prevent multiple bets
+
+            selectedSide = side;
+            // Visual feedback instead of alert
+            document.getElementById(side === 'dragon' ? 'd-bet-tag' : 't-bet-tag').style.display = 'block';
+            
+            // Deduct balance immediately
+            const newBal = currentBalance - betAmount;
+            await update(ref(db, 'users/' + auth.currentUser.uid), { balance: newBal });
+        };
+
+        // 3. Game Timer & Professional Result
+        let timer = 15;
+        setInterval(async () => {
+            timer--;
+            if (timer < 0) {
+                await processResult();
+                timer = 15;
+            }
+            document.getElementById('time-left').innerText = "00:" + (timer < 10 ? "0"+timer : timer);
         }, 1000);
 
-        function showResult() {
-            // Random numbering (Professional logic)
-            const dNum = Math.floor(Math.random() * 13) + 1;
-            const tNum = Math.floor(Math.random() * 13) + 1;
-            
-            document.getElementById('d-val').innerText = dNum;
-            document.getElementById('t-val').innerText = tNum;
+        async function processResult() {
+            const dVal = Math.floor(Math.random() * 13) + 1;
+            const tVal = Math.floor(Math.random() * 13) + 1;
+            const winner = dVal > tVal ? 'dragon' : 'tiger';
 
-            const winner = dNum > tNum ? 'dragon' : 'tiger';
-            
-            if (userBet) {
-                const isWin = userBet === winner;
-                const title = document.getElementById('result-title');
-                const msg = document.getElementById('result-msg');
+            if (selectedSide) {
+                const isWin = selectedSide === winner;
+                const status = document.getElementById('res-status');
+                const desc = document.getElementById('res-desc');
                 
                 if (isWin) {
-                    title.innerText = "YOU WIN! 🎉";
-                    title.className = "win-text";
-                    msg.innerText = "Mubarak ho! Win Amount: " + (betAmount * 2);
+                    const winPrize = betAmount * 2;
+                    await update(ref(db, 'users/' + auth.currentUser.uid), { balance: currentBalance + winPrize });
+                    status.innerText = "WINNER! 🎉";
+                    status.style.color = "#ffcc00";
+                    desc.innerText = "You won PKR " + winPrize;
                 } else {
-                    title.innerText = "YOU LOSE! ❌";
-                    title.className = "lose-text";
-                    msg.innerText = "Behtar koshish agli baar!";
+                    status.innerText = "LOSE! 💔";
+                    status.style.color = "#ff4444";
+                    desc.innerText = "Try again in next round!";
                 }
-                
+
+                document.getElementById('res-nums').innerText = `${dVal} vs ${tVal}`;
                 document.getElementById('overlay').style.display = 'block';
-                document.getElementById('game-popup').style.display = 'block';
+                document.getElementById('popup').style.display = 'block';
             }
+            resetBoard();
         }
 
-        window.placeBet = (side) => {
-            if(seconds < 3) return; // Last 3 seconds no bet
-            userBet = side;
-            betAmount = 100; // Example amount
-            alert("Bet Placed on " + side.toUpperCase());
-        };
-
-        window.closePopup = () => {
+        window.closePop = () => {
             document.getElementById('overlay').style.display = 'none';
-            document.getElementById('game-popup').style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
         };
 
-        function resetGame() {
-            userBet = null;
-            document.getElementById('d-val').innerText = "?";
-            document.getElementById('t-val').innerText = "?";
+        function resetBoard() {
+            selectedSide = null;
+            document.getElementById('d-bet-tag').style.display = 'none';
+            document.getElementById('t-bet-tag').style.display = 'none';
         }
-
-        // Live Balance
-        onValue(ref(db, 'users/' + auth.currentUser?.uid + '/balance'), (snap) => {
-            document.getElementById('user-balance').innerText = snap.val() || 0;
-        });
     </script>
 </body>
 </html>
