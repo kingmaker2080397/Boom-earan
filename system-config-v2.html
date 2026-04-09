@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin - Update Deposit Number</title>
+    <title>Master Admin Control</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #000; color: gold; font-family: sans-serif; padding: 20px; text-align: center; }
-        .card { border: 2px solid gold; padding: 20px; background: #111; border-radius: 10px; max-width: 500px; margin: auto; }
-        input { padding: 12px; width: 80%; background: #222; color: #fff; border: 1px solid #444; margin: 10px 0; }
-        button { padding: 12px 25px; background: gold; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        body { background: #000; color: gold; font-family: sans-serif; padding: 20px; }
+        .card { background: #111; border: 2px solid gold; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+        button { padding: 12px; background: gold; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin: 5px; }
+        input { padding: 12px; width: 300px; background: #222; color: #fff; border: 1px solid #444; }
+        .item { background: #222; padding: 10px; margin: 5px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #444; }
     </style>
 </head>
 <body>
+    <h1>🚀 Boom Master Control</h1>
+
     <div class="card">
-        <h2>💰 Update Deposit Number</h2>
-        <p>Yahan EasyPaisa/JazzCash likhein:</p>
-        <input type="text" id="admin-num" placeholder="Example: EasyPaisa 03001234567">
-        <button onclick="updateNumber()">Update on User App</button>
+        <h3>💰 Update Deposit Number</h3>
+        <input type="text" id="admin-num" placeholder="EasyPaisa/JazzCash Number">
+        <button onclick="updateNum()">Update User App</button>
+    </div>
+
+    <div class="card">
+        <h3>🎮 Game Result Control</h3>
+        <button onclick="setRes('tiger')" style="background:red; color:white;">TIGER WIN</button>
+        <button onclick="setRes('dragon')" style="background:blue; color:white;">DRAGON WIN</button>
+        <button onclick="setRes('random')">RANDOM</button>
+    </div>
+
+    <div class="card">
+        <h3>📩 Pending KYC & Deposits</h3>
+        <div id="master-list">Loading Requests...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, set, update, onValue, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
@@ -32,11 +46,44 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        window.updateNumber = () => {
+        window.updateNum = () => {
             const num = document.getElementById('admin-num').value;
-            if(!num) return alert("Number likhein!");
-            set(ref(db, 'adminSettings/depositNumber'), num)
-                .then(() => Swal.fire("Success", "Number Deposit Page par update ho gaya!", "success"));
+            set(ref(db, 'adminSettings/depositNumber'), num).then(() => Swal.fire("Updated!", "User app par number chala gaya", "success"));
+        };
+
+        window.setRes = (res) => set(ref(db, 'gameControl/nextResult'), res);
+
+        onValue(ref(db), (snap) => {
+            const list = document.getElementById('master-list');
+            list.innerHTML = "";
+            const data = snap.val();
+            if(!data) return;
+
+            // Show KYC
+            if(data.kyc) {
+                for(let id in data.kyc) if(data.kyc[id].status === 'pending') {
+                    list.innerHTML += `<div class="item"><span>KYC: ${data.kyc[id].email}</span> <button onclick="approveKYC('${id}','${data.kyc[id].uid}')">APPROVE</button></div>`;
+                }
+            }
+            // Show Deposits
+            if(data.deposits) {
+                for(let id in data.deposits) if(data.deposits[id].status === 'pending') {
+                    list.innerHTML += `<div class="item"><span>DEP: ${data.deposits[id].amount} (${data.deposits[id].email})</span> <button onclick="approveDep('${id}','${data.deposits[id].uid}', ${data.deposits[id].amount})">APPROVE</button></div>`;
+                }
+            }
+        });
+
+        window.approveKYC = (id, uid) => {
+            update(ref(db, `users/${uid}`), { kycVerified: true });
+            update(ref(db, `kyc/${id}`), { status: 'verified' });
+        };
+
+        window.approveDep = (id, uid, amt) => {
+            get(ref(db, `users/${uid}/balance`)).then((snap) => {
+                const newBal = (snap.val() || 0) + amt;
+                update(ref(db, `users/${uid}`), { balance: newBal });
+                update(ref(db, `deposits/${id}`), { status: 'approved' });
+            });
         };
     </script>
 </body>
