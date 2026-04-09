@@ -3,43 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Boom Official</title>
+    <title>Profile - Boom</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
         .card { background: #111; border: 2px solid #ffcc00; border-radius: 20px; padding: 30px; max-width: 400px; margin: auto; }
-        .profile-img { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #ffcc00; object-fit: cover; margin-bottom: 10px; }
-        .v-badge { font-weight: bold; font-size: 18px; margin: 15px 0; }
-        .info { background: #222; padding: 15px; border-radius: 10px; text-align: left; margin: 20px 0; }
-        .info p { margin: 10px 0; font-size: 16px; }
-        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-back { background: #ffcc00; color: #000; }
-        .btn-upload { background: #444; color: #fff; font-size: 12px; margin-bottom: 15px; }
+        .user-pic { width: 120px; height: 120px; border-radius: 50%; border: 3px solid #ffcc00; object-fit: cover; }
+        .badge { font-weight: bold; font-size: 18px; margin: 15px 0; color: #ff4444; }
+        .stats { background: #222; padding: 15px; border-radius: 10px; text-align: left; margin: 20px 0; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; background: #ffcc00; color: #000; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <img id="user-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img">
-        <input type="file" id="photo-input" hidden accept="image/*">
-        <button class="btn-upload" onclick="document.getElementById('photo-input').click()">CHANGE PHOTO</button>
+        <img id="u-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="user-pic">
+        <div id="u-badge" class="badge">Status: Not Verified</div>
 
-        <div id="verified-badge" class="v-badge">Checking Status...</div>
-
-        <div class="info">
+        <div class="stats">
             <p>💰 Balance: <b id="u-balance" style="color:#ffcc00">PKR 0</b></p>
             <p>📧 Email: <span id="u-email">...</span></p>
         </div>
 
-        <button class="btn-back" onclick="location.href='index.html'">BACK TO GAME</button>
+        <button onclick="location.href='index.html'">BACK TO GAME</button>
+        <button onclick="auth.signOut().then(()=>location.href='login.html')" style="background:#ff4444; color:#fff;">LOGOUT</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-        // Aapki Fixed Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
             authDomain: "boom-earnings.firebaseapp.com",
@@ -49,64 +43,24 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
         const auth = getAuth(app);
-
-        // ImgBB API Key
-        const IMGBB_KEY = "a25b5bea8eb38a1ecf404154d85a4bf";
+        const db = getDatabase(app);
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('u-email').innerText = user.email;
-
-                // Real-time Data Fetching
-                onValue(ref(db, 'users/' + user.uid), (snapshot) => {
-                    const data = snapshot.val();
+                onValue(ref(db, 'users/' + user.uid), (snap) => {
+                    const data = snap.val();
                     if (data) {
                         document.getElementById('u-balance').innerText = "PKR " + (data.balance || 0);
-                        document.getElementById('user-pic').src = data.profilePic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                        
-                        // Verified Tick Logic
-                        const badge = document.getElementById('verified-badge');
+                        document.getElementById('u-pic').src = data.profilePic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
                         if (data.kycStatus === "verified") {
-                            badge.innerHTML = "Verified Member ✅";
-                            badge.style.color = "#00ff00";
-                        } else {
-                            badge.innerHTML = "Status: Pending ⏳";
-                            badge.style.color = "#ff4444";
+                            document.getElementById('u-badge').innerHTML = "Verified Member ✅";
+                            document.getElementById('u-badge').style.color = "#00ff00";
                         }
                     }
                 });
-
-                // Photo Upload to ImgBB Logic
-                document.getElementById('photo-input').onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    Swal.fire('Uploading...');
-                    
-                    let formData = new FormData();
-                    formData.append("image", file);
-
-                    try {
-                        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-                            method: "POST",
-                            body: formData
-                        });
-                        const resData = await res.json();
-                        const finalUrl = resData.data.url;
-
-                        // Save Link to Firebase
-                        await update(ref(db, 'users/' + user.uid), { profilePic: finalUrl });
-                        Swal.fire('Success', 'Photo Updated!', 'success');
-                    } catch (err) {
-                        Swal.fire('Error', 'Upload Failed', 'error');
-                    }
-                };
-
-            } else {
-                window.location.href = 'login.html';
-            }
+            } else { window.location.href = 'login.html'; }
         });
     </script>
 </body>
