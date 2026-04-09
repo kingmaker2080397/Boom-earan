@@ -3,86 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Boom - Tiger vs Dragon</title>
+    <title>Boom - Sher Edition</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; overflow-x: hidden; }
-        .header { display: flex; justify-content: space-between; padding: 10px; background: #111; border-bottom: 2px solid gold; align-items: center; }
-        .balance-box { color: gold; font-weight: bold; font-size: 18px; border: 1px solid gold; padding: 5px 10px; border-radius: 20px; }
+        body { background: #000; color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; }
+        .header { display: flex; justify-content: space-between; padding: 15px; background: #111; border-bottom: 2px solid gold; align-items: center; }
+        .balance-box { color: gold; font-weight: bold; font-size: 20px; text-shadow: 0 0 5px gold; }
         
-        .timer-section { margin: 15px 0; }
-        .timer-circle { font-size: 35px; color: gold; border: 4px solid gold; display: inline-block; width: 70px; height: 70px; line-height: 62px; border-radius: 50%; background: rgba(255,215,0,0.1); }
-        #result-display { font-size: 20px; color: #00f2ff; margin-top: 10px; font-weight: bold; min-height: 30px; }
+        /* Timer & Status */
+        .timer-circle { font-size: 40px; color: gold; border: 4px solid gold; display: inline-block; width: 85px; height: 85px; line-height: 75px; border-radius: 50%; margin: 15px; background: radial-gradient(#222, #000); }
+        #result-display { font-size: 22px; color: #00f2ff; font-weight: bold; min-height: 30px; margin-bottom: 10px; }
 
-        .cards-container { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; padding: 0 10px; }
-        .card-box { width: 45%; }
-        .card-box img { width: 100%; max-width: 140px; height: 140px; object-fit: contain; border-radius: 10px; border: 2px solid #333; }
-        .vs-text { font-size: 30px; font-weight: bold; color: gold; }
+        /* Game Area */
+        .cards-container { display: flex; justify-content: space-around; align-items: center; padding: 10px; }
+        .card-box { width: 45%; background: #080808; border: 2px solid #222; border-radius: 20px; padding: 15px; transition: 0.3s; }
+        .card-box img { width: 100%; max-width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(255,255,255,0.1)); }
+        .tiger-label { color: #ff4444; font-size: 22px; font-weight: bold; margin-top: 10px; }
+        .dragon-label { color: #4444ff; font-size: 22px; font-weight: bold; margin-top: 10px; }
 
-        .bet-input-area { margin: 20px 0; }
-        input#bet-amount { background: #111; border: 2px solid gold; color: gold; padding: 10px; width: 120px; border-radius: 10px; font-size: 18px; text-align: center; }
-        
-        .bet-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px; transition: 0.2s; width: 140px; }
-        .btn-tiger { background: #d32f2f; color: white; box-shadow: 0 4px #8b0000; }
-        .btn-dragon { background: #1976d2; color: white; box-shadow: 0 4px #0d47a1; }
-        .btn:active { transform: translateY(4px); box-shadow: none; }
+        /* Betting Area */
+        .bet-controls { margin: 20px 0; }
+        input#bet-amount { background: #111; border: 2px solid gold; color: gold; padding: 12px; width: 140px; border-radius: 10px; font-size: 20px; text-align: center; }
+        .bet-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 15px; }
+        .btn { padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; width: 150px; font-size: 16px; color: white; transition: 0.2s; }
+        .btn-tiger { background: linear-gradient(to bottom, #ff4444, #8b0000); border-bottom: 4px solid #5a0000; }
+        .btn-dragon { background: linear-gradient(to bottom, #4444ff, #0d47a1); border-bottom: 4px solid #06214a; }
+        .btn:active { transform: translateY(3px); border-bottom: none; }
 
-        .nav-menu { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-        .nav-menu button { background: #222; color: #ccc; border: 1px solid #444; padding: 8px 15px; border-radius: 5px; font-size: 12px; }
+        /* Share Section */
+        .share-box { background: #111; padding: 20px; margin-top: 30px; border-top: 1px solid gold; }
+        .share-box p { color: gold; margin-bottom: 10px; font-weight: bold; }
+        .copy-input-group { display: flex; justify-content: center; gap: 5px; }
+        #referral-link-input { width: 60%; padding: 12px; background: #000; color: #00f2ff; border: 1px solid #444; border-radius: 5px; }
+        .copy-btn { background: gold; color: #000; padding: 10px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
 
-        .ref-section { background: #0a0a0a; padding: 20px; margin-top: 30px; border-top: 1px solid #222; }
-        #referral-link-input { width: 70%; padding: 10px; background: #000; color: gold; border: 1px solid #444; border-radius: 5px; margin-bottom: 10px; }
+        .admin-notice { font-size: 12px; color: #888; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div id="display-email">Player</div>
-        <div class="balance-box">💰 PKR <span id="balance">0</span></div>
+        <div id="display-email">User</div>
+        <div class="balance-box">💰 <span id="balance">0</span> PKR</div>
     </div>
 
-    <div class="nav-menu">
-        <button onclick="location.href='deposit.html'">Deposit</button>
-        <button onclick="location.href='withdraw.html'">Withdraw</button>
-        <button onclick="location.href='kyc.html'">KYC</button>
+    <div class="nav" style="margin: 10px;">
+        <button onclick="location.href='deposit.html'">DEPOSIT</button>
+        <button onclick="location.href='withdraw.html'">WITHDRAW</button>
+        <button onclick="location.href='ladder.html'">LEADERBOARD</button>
     </div>
 
-    <div class="timer-section">
-        <div class="timer-circle" id="timer">15</div>
-        <div id="result-display">Waiting for bets...</div>
-    </div>
+    <div class="timer-circle" id="timer">15</div>
+    <div id="result-display">PLACING BETS...</div>
 
     <div class="cards-container">
         <div class="card-box">
-            <img src="https://img.icons8.com/color/200/tiger.png" alt="Tiger">
-            <h3 style="color:#ff4444;">TIGER</h3>
+            <img src="https://www.pngplay.com/wp-content/uploads/12/Tiger-Logo-PNG-Clipart-Background.png" alt="Sher">
+            <div class="tiger-label">SHER (TIGER)</div>
         </div>
-        <div class="vs-text">VS</div>
+        <div style="font-size: 40px; color: gold;">VS</div>
         <div class="card-box">
             <img src="https://img.icons8.com/color/200/dragon.png" alt="Dragon">
-            <h3 style="color:#4444ff;">DRAGON</h3>
+            <div class="dragon-label">DRAGON</div>
         </div>
     </div>
 
-    <div class="bet-input-area">
-        <p style="font-size: 12px; color: #888; margin-bottom: 5px;">ENTER AMOUNT</p>
+    <div class="bet-controls">
         <input type="number" id="bet-amount" value="100">
         <div class="bet-buttons">
-            <button class="btn btn-tiger" onclick="placeBet('tiger')">BET TIGER</button>
-            <button class="btn btn-dragon" onclick="placeBet('dragon')">BET DRAGON</button>
+            <button class="btn btn-tiger" onclick="placeBet('tiger')">BET SHER 🐅</button>
+            <button class="btn btn-dragon" onclick="placeBet('dragon')">BET DRAGON 🐉</button>
         </div>
     </div>
 
-    <div class="ref-section">
-        <input type="text" id="referral-link-input" readonly>
-        <button onclick="copyRefLink()" style="padding: 10px; background: gold; border: none; font-weight: bold; border-radius: 5px;">COPY</button>
+    <div class="share-box">
+        <p>📢 SHARE & EARN COMMISSION</p>
+        <div class="copy-input-group">
+            <input type="text" id="referral-link-input" readonly>
+            <button class="copy-btn" onclick="copyShareLink()">COPY</button>
+        </div>
+        <div class="admin-notice">Deposit Number: <span id="admin-num" style="color:white;">Loading...</span></div>
     </div>
-
-    <audio id="snd-click" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
-    <audio id="snd-win" src="https://www.soundjay.com/human/sounds/applause-01.mp3"></audio>
-    <audio id="snd-tick" src="https://www.soundjay.com/clock/sounds/clock-ticking-2.mp3"></audio>
 
     <script type="module" src="main.js"></script>
 </body>
