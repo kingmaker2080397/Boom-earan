@@ -3,63 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Earning - Dragon vs Tiger</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Boom Dragon vs Tiger</title>
     <style>
-        /* Game Page Styles */
-        body { background-color: #121212; color: white; font-family: Arial, sans-serif; margin: 0; text-align: center; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #1f1f1f; border-bottom: 2px solid #ffcc00; }
-        .balance-box { font-size: 20px; font-weight: bold; color: #ffcc00; }
-        .profile-btn { background: #ffcc00; color: black; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; text-align: center; }
         
-        .game-container { padding: 40px 20px; }
-        .game-title { font-size: 32px; font-weight: bold; margin-bottom: 10px; }
-        .timer-box { font-size: 24px; color: #ffcc00; margin-bottom: 30px; }
+        /* Top Bar */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #111; border-bottom: 2px solid #ffcc00; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .balance-box { font-size: 20px; font-weight: bold; color: #ffcc00; text-shadow: 0 0 5px rgba(255,204,0,0.3); }
+
+        /* Timer Section */
+        .game-info { margin: 25px 0; }
+        .timer { font-size: 26px; color: #ffcc00; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; display: inline-block; border: 1px solid #333; }
+
+        /* --- LUXURY 3D BUTTONS STYLE --- */
+        .btn-3d {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 #000;
+            text-decoration: none;
+            overflow: hidden; /* For photo within button */
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #000 !important;
+        }
+
+        /* 1 & 2: Main Game Buttons (Big 3D with Photos) */
+        .game-container { display: flex; justify-content: center; gap: 20px; padding: 20px; }
+        .btn-main { width: 140px; height: 140px; font-size: 18px; color: #fff; }
         
-        .button-group { display: flex; justify-content: center; gap: 20px; }
-        .bet-btn { width: 150px; height: 150px; border-radius: 15px; border: none; font-size: 22px; font-weight: bold; cursor: pointer; transition: 0.3s; color: black; }
-        .dragon { background: linear-gradient(145deg, #ff4b2b, #ff416c); box-shadow: 0 0 15px rgba(255, 75, 43, 0.5); }
-        .tiger { background: linear-gradient(145deg, #4b6cb7, #182848); color: white; box-shadow: 0 0 15px rgba(75, 108, 183, 0.5); }
-        .bet-btn:active { transform: scale(0.9); }
+        /* Dragon Button with Photo */
+        .btn-dragon { 
+            background: linear-gradient(145deg, #ff4b2b, #ff416c); 
+            box-shadow: 0 8px 0 #b32a15; 
+            background-image: url('dragon_photo.png'); /* Replace with your dragon image filename */
+            background-size: cover; 
+            background-position: center; 
+            color: transparent; /* Hide text if photo has text */
+        }
         
-        /* Footer for Navigation */
-        .footer-nav { position: fixed; bottom: 0; width: 100%; background: #1f1f1f; padding: 10px 0; display: flex; justify-content: space-around; }
-        .footer-nav a { color: white; text-decoration: none; font-size: 14px; }
+        /* Tiger Button with Photo */
+        .btn-tiger { 
+            background: linear-gradient(145deg, #4b6cb7, #182848); 
+            box-shadow: 0 8px 0 #2a3d6d; 
+            background-image: url('tiger_photo.png'); /* Replace with your tiger image filename */
+            background-size: cover; 
+            background-position: center; 
+            color: transparent; /* Hide text if photo has text */
+        }
+
+        /* 3: My Profile Button */
+        .btn-profile { background: linear-gradient(145deg, #ffcc00, #d4aa00); color: #000; padding: 10px 20px; box-shadow: 0 5px 0 #997a00; border-radius: 30px; font-size: 14px; }
+
+        /* Bottom Nav Buttons (4, 5, 6) */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; background: #111; padding: 10px 0; border-top: 1px solid #333; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); }
+        .btn-nav { flex: 1; margin: 0 5px; padding: 12px; font-size: 14px; color: #fff; background: #222; box-shadow: 0 4px 0 #000; text-transform: none; }
+        .btn-nav.active { background: #333; border: 1px solid #ffcc00; }
+
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="balance-box">
-            💰 <span id="top-balance">0</span>
-        </div>
-        <a href="profile.html" class="profile-btn">MY PROFILE 👤</a>
+        <div class="balance-box">💰 <span id="user-balance">0</span></div>
+        <button class="btn-3d btn-profile" onclick="window.location.href='profile.html'">MY PROFILE 👤</button>
+    </div>
+
+    <div class="game-info">
+        <h1 style="color:#ff4b2b">DRAGON <span style="color:#fff">VS</span> <span style="color:#4b6cb7">TIGER</span></h1>
+        <div class="timer">Next Round: <span id="time-left">00:15</span></div>
     </div>
 
     <div class="game-container">
-        <div class="game-title">
-            <span style="color: #ff4b2b;">DRAGON</span> 
-            <span style="color: #ffcc00;">VS</span> 
-            <span style="color: #4b6cb7;">TIGER</span>
-        </div>
-
-        <div class="timer-box" id="timer">
-            Next Round: 00:15
-        </div>
-
-        <div class="button-group">
-            <button class="bet-btn dragon" onclick="placeBet('dragon')">DRAGON</button>
-            <button class="bet-btn tiger" onclick="placeBet('tiger')">TIGER</button>
-        </div>
+        <button class="btn-3d btn-main btn-dragon" onclick="placeBet('dragon')">DRAGON</button>
+        <button class="btn-3d btn-main btn-tiger" onclick="placeBet('tiger')">TIGER</button>
     </div>
 
-    <div class="footer-nav">
-        <a href="index.html">🏠 Home</a>
-        <a href="deposit.html">💵 Deposit</a>
-        <a href="withdraw.html">🏦 Withdraw</a>
+    <div class="bottom-nav">
+        <button class="btn-3d btn-nav active" onclick="window.location.href='index.html'">🏠 Home</button>
+        <button class="btn-3d btn-nav" onclick="window.location.href='deposit.html'">💵 Deposit</button>
+        <button class="btn-3d btn-nav" onclick="window.location.href='withdraw.html'">🏦 Withdraw</button>
     </div>
 
-    <script type="module" src="main.js?v=1.2"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const auth = getAuth(app);
+
+        // Balance Display
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(ref(db, 'users/' + user.uid + '/balance'), (snap) => {
+                    document.getElementById('user-balance').innerText = snap.val() || 0;
+                });
+            }
+        });
+
+        // Simple Timer Logic
+        let seconds = 15;
+        setInterval(() => {
+            seconds--;
+            if(seconds < 0) seconds = 15;
+            document.getElementById('time-left').innerText = "00:" + (seconds < 10 ? "0" + seconds : seconds);
+        }, 1000);
+
+        window.placeBet = (side) => {
+            // Check if user is logged in
+            if (!auth.currentUser) {
+                alert("Pehle login karein, Sain!");
+                window.location.href = 'login.html';
+                return;
+            }
+            alert("Bet Placed on " + side.toUpperCase() + "! Good Luck Sain.");
+            // You'll need more complex logic here to handle balance deduction, etc.
+        };
+    </script>
 </body>
 </html>
