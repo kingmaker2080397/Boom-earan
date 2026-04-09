@@ -1,48 +1,108 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+    <title>User Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #000; color: #fff; text-align: center; font-family: sans-serif; }
-        .p-box { background: #111; margin: 20px; padding: 30px; border: 1px solid #ffcc00; border-radius: 15px; }
-        .dp { width: 100px; height: 100px; border-radius: 50%; border: 2px solid gold; object-fit: cover; }
-        .v-badge { color: #00ff00; font-weight: bold; margin: 10px 0; display: block; }
-        button { background: #ffcc00; padding: 12px; border: none; width: 80%; border-radius: 8px; font-weight: bold; margin-top: 10px; }
-        .logout { background: #ff3131; color: #fff; }
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
+        .p-card { background: #111; border: 2px solid #ffcc00; border-radius: 20px; padding: 30px; max-width: 400px; margin: auto; position: relative; }
+        
+        /* DP System */
+        .dp-container { position: relative; width: 120px; height: 120px; margin: auto; }
+        .dp-img { width: 100%; height: 100%; border-radius: 50%; border: 3px solid #ffcc00; object-fit: cover; background: #222; }
+        .upload-icon { position: absolute; bottom: 0; right: 0; background: #ffcc00; color: #000; padding: 5px; border-radius: 50%; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        /* Verified Badge */
+        .verified-badge { display: none; color: #00ff00; font-size: 14px; margin-top: 10px; font-weight: bold; }
+        .is-verified .verified-badge { display: block; }
+        
+        .info { margin: 20px 0; border-top: 1px solid #333; padding-top: 20px; }
+        .info p { margin: 10px 0; color: #aaa; }
+        .info b { color: #fff; }
+
+        button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; }
+        .btn-main { background: #ffcc00; color: #000; }
+        .btn-logout { background: #ff3131; color: #fff; }
     </style>
 </head>
 <body>
-    <h2>User Profile 🇵🇰</h2>
-    <div class="p-box">
-        <img id="user-dp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="dp">
-        <h3 id="p-name">Loading...</h3>
-        <p id="p-email"></p>
-        <span id="v-status" class="v-badge">Checking Status...</span>
-        <button onclick="location.href='index.html'">Back to Game</button>
-        <button class="logout" id="logout-btn">LOGOUT</button>
+
+    <div class="p-card" id="profile-area">
+        <div class="dp-container">
+            <img id="display-dp" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="dp-img">
+            <label for="dp-input" class="upload-icon">EDIT</label>
+            <input type="file" id="dp-input" hidden accept="image/*">
+        </div>
+
+        <div class="verified-badge">✅ Verified Member 🇵🇰</div>
+        
+        <h2 id="u-name">Loading...</h2>
+        
+        <div class="info">
+            <p>Email: <b id="u-email">...</b></p>
+            <p>Wallet Balance: <b id="u-balance">0</b> PKR</p>
+            <p>Account Status: <b id="u-status">Pending KYC</b></p>
+        </div>
+
+        <button class="btn-main" onclick="location.href='index.html'">BACK TO GAME</button>
+        <button class="btn-logout" id="logout-btn">LOGOUT</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-storage.js";
 
-        const firebaseConfig = { /* Config */ };
+        // CONFIG (Replace with your keys)
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            storageBucket: "boom-earnings.appspot.com", // ISKO SAHI KAREIN
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         onAuthStateChanged(auth, (user) => {
-            if(user) {
+            if (user) {
+                // Fetch User Data
                 onValue(ref(db, `users/${user.uid}`), (snap) => {
                     const d = snap.val();
-                    document.getElementById('p-name').innerText = d?.name || "Player";
-                    document.getElementById('p-email').innerText = user.email;
-                    if(d?.kycVerified) document.getElementById('v-status').innerHTML = "✅ Verified Account 🇵🇰";
-                    else document.getElementById('v-status').innerText = "❌ Not Verified";
+                    document.getElementById('u-name').innerText = d.name || "Player";
+                    document.getElementById('u-email').innerText = user.email;
+                    document.getElementById('u-balance').innerText = d.balance || 0;
+                    document.getElementById('display-dp').src = d.profilePic || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+                    if (d.kycStatus === "verified") {
+                        document.getElementById('profile-area').classList.add('is-verified');
+                        document.getElementById('u-status').innerText = "Verified ✅";
+                        document.getElementById('u-status').style.color = "#00ff00";
+                    }
                 });
-            }
+
+                // Photo Upload System
+                document.getElementById('dp-input').onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    Swal.fire("Uploading...", "Updating your DP", "info");
+                    
+                    const picRef = sRef(storage, `profiles/${user.uid}`);
+                    await uploadBytes(picRef, file);
+                    const url = await getDownloadURL(picRef);
+                    
+                    await update(ref(db, `users/${user.uid}`), { profilePic: url });
+                    Swal.fire("Success", "DP Updated!", "success");
+                };
+            } else { window.location.href = 'login.html'; }
         });
 
         document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.href='login.html');
