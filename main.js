@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getDatabase, ref, onValue, set, runTransaction } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-// 1. Firebase Configuration
 const firebaseConfig = {
     apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
     authDomain: "boom-earnings.firebaseapp.com",
@@ -15,80 +14,49 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
-// 2. Sound Effects (Trade lagne par bajenge)
-const betSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+// --- Global Function for Buttons ---
+window.placeBet = (side) => {
+    const user = auth.currentUser;
+    if (!user) { alert("Please Login First!"); return; }
 
-// 3. User State & Balance Update
+    const userRef = ref(db, 'users/' + user.uid);
+    runTransaction(userRef, (currentData) => {
+        if (currentData && currentData.balance >= 10) {
+            currentData.balance -= 10;
+            return currentData;
+        }
+        return;
+    }).then((result) => {
+        if (result.committed) {
+            alert("Success! Bet placed on " + side);
+            new Audio('https://www.soundjay.com/buttons/button-16.mp3').play();
+        } else {
+            alert("Insufficient Balance!");
+        }
+    });
+};
+
+// --- Real-time Updates ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
         onValue(ref(db, 'users/' + user.uid), (snap) => {
             const data = snap.val();
-            const balElement = document.getElementById('top-balance');
-            const uBalElement = document.getElementById('u-balance');
-            const uNameElement = document.getElementById('u-name');
-
             if (data) {
-                if (balElement) balElement.innerText = data.balance || 0;
-                if (uBalElement) uBalElement.innerText = "PKR " + (data.balance || 0);
-                if (uNameElement) uNameElement.innerText = data.name || "Player";
+                if(document.getElementById('top-balance')) document.getElementById('top-balance').innerText = data.balance || 0;
+                if(document.getElementById('u-balance')) document.getElementById('u-balance').innerText = "PKR " + (data.balance || 0);
+                if(document.getElementById('u-name')) document.getElementById('u-name').innerText = data.name || "User";
             }
         });
     }
 });
 
-// 4. Trade (Betting) Function
-window.placeBet = (side) => {
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Pehle Login karein!");
-        return;
-    }
-
-    // Amount input se lein ya fix rakhein (Yahan 10 rakha hai)
-    const betAmount = 10; 
-    const userRef = ref(db, 'users/' + user.uid);
-
-    runTransaction(userRef, (currentData) => {
-        if (currentData && (currentData.balance >= betAmount)) {
-            currentData.balance -= betAmount;
-            return currentData;
-        }
-        return; 
-    }).then((result) => {
-        if (result.committed) {
-            // Sound play karein
-            betSound.play().catch(e => console.log("Sound error"));
-            
-            // Firebase mein bet record save karein
-            const newBetRef = ref(db, 'all_bets/' + Date.now());
-            set(newBetRef, {
-                uid: user.uid,
-                side: side,
-                amount: betAmount,
-                timestamp: Date.now()
-            });
-
-            alert("Trade Successful on " + side.toUpperCase());
-        } else {
-            alert("Insufficient Balance! Please Deposit.");
-        }
-    }).catch((error) => {
-        console.error(error);
-        alert("Connection Error!");
-    });
-};
-
-// 5. Timer System (15 Seconds)
+// --- Timer ---
 let timeLeft = 15;
-const timerDisplay = document.getElementById('timer');
-
-if (timerDisplay) {
-    setInterval(() => {
-        timeLeft--;
-        if (timeLeft < 0) {
-            timeLeft = 15; // Reset round
-            // Yahan winner announce karne ka logic aayega
-        }
-        timerDisplay.innerText = `Next Round: 00:${timeLeft < 10 ? '0' + timeLeft : timeLeft}`;
-    }, 1000);
-        }
+setInterval(() => {
+    const timerText = document.getElementById('timer');
+    if (timerText) {
+        timeLeft = timeLeft <= 0 ? 15 : timeLeft - 1;
+        timerText.innerText = `Next Round: 00:${timeLeft < 10 ? '0'+timeLeft : timeLeft}`;
+    }
+}, 1000);
+            
