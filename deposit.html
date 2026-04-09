@@ -2,104 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deposit - Boom Earnings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Deposit Funds - Boom</title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { border: 2px solid gold; padding: 20px; border-radius: 15px; background: #111; max-width: 400px; margin: auto; }
-        h2 { color: gold; }
-        .payment-info { background: #222; padding: 10px; border-radius: 8px; margin: 15px 0; border-left: 5px solid gold; text-align: left; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #000; color: #fff; }
-        button { width: 100%; padding: 15px; background: gold; color: #000; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .back-btn { margin-top: 15px; background: #333; color: #fff; }
-        #preview { width: 100px; margin-top: 10px; display: none; border-radius: 5px; }
+        :root { --gold: #ffcc00; --dark: #0a0a0a; }
+        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; text-align: center; }
+        
+        .container { max-width: 400px; margin: auto; border: 2px solid var(--gold); border-radius: 20px; padding: 20px; background: #111; box-shadow: 0 0 20px rgba(255, 204, 0, 0.1); }
+        h2 { color: var(--gold); margin-bottom: 25px; }
+
+        /* Admin Number Box */
+        .info-box { background: #222; border-radius: 12px; padding: 15px; border-left: 5px solid var(--gold); text-align: left; margin-bottom: 20px; }
+        .info-box p { margin: 5px 0; font-size: 14px; }
+        .admin-num { color: var(--gold); font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-size: 16px; }
+        
+        .upload-area { border: 2px dashed #444; padding: 20px; border-radius: 10px; margin: 15px 0; cursor: pointer; }
+        #preview { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; }
+
+        .btn-submit { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 16px; text-transform: uppercase; }
+        .btn-back { display: block; margin-top: 15px; color: #888; text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="box">
+    <div class="container">
         <h2>💰 Deposit Funds</h2>
-        
-        <div class="payment-info">
-            <p><strong>Method:</strong> Easypaisa / JazzCash</p>
-            <p><strong>Account Name:</strong> Boom Admin</p>
-            <p><strong>Number:</strong> 03xx-xxxxxxx</p> </div>
 
-        <input type="number" id="dep-amount" placeholder="Enter Amount (Min 100)">
-        <p style="font-size: 12px; color: #aaa;">Upload Payment Screenshot:</p>
-        <input type="file" id="dep-file" accept="image/*" onchange="previewImg(event)">
-        <img id="preview">
-
-        <button onclick="submitDeposit()">SUBMIT REQUEST</button>
-        <button class="back-btn" onclick="location.href='index.html'">⬅️ Back to Game</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-        // Same Config as main.js
-        const firebaseConfig = {
-            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-            authDomain: "boom-earnings.firebaseapp.com",
-            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-            projectId: "boom-earnings",
-            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        let currentUser = null;
-
-        // AUTH CHECK: Is se aap logout nahi honge
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-            } else {
-                currentUser = user;
-                console.log("Logged in as:", user.email);
-            }
-        });
-
-        window.previewImg = (event) => {
-            const out = document.getElementById('preview');
-            out.src = URL.createObjectURL(event.target.files[0]);
-            out.style.display = "block";
-        };
-
-        window.submitDeposit = async () => {
-            const amt = document.getElementById('dep-amount').value;
-            const file = document.getElementById('dep-file').files[0];
-
-            if(!amt || amt < 100) return Swal.fire("Error", "Minimum deposit is 100", "error");
-            if(!file) return Swal.fire("Error", "Please upload screenshot", "error");
-
-            Swal.fire({ title: 'Submitting...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-            // File ko Base64 mein convert karna (Taki bina Storage ke bhi kaam chale)
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64Img = reader.result;
+        <div class="info-box">
+            <p><b>Method:</b> EasyPaisa / JazzCash</p>
+            <p><b>Account Name:</b> Boom Admin Official</p>
+            <p><b>Send Money To:</b></p>
+            <div id="admin-num-display" class="admin-num">Loading...</div>
+            <p style="font-size: 10px; color: #888; margin-top: 5px;">(Admin updates this number automatically)</
                 
-                const newDepRef = push(ref(db, 'deposits'));
-                await set(newDepRef, {
-                    uid: currentUser.uid,
-                    email: currentUser.email,
-                    amount: parseInt(amt),
-                    screenshotUrl: base64Img,
-                    status: "pending",
-                    timestamp: Date.now()
-                });
-
-                Swal.fire("Success!", "Request sent to Admin. Wait for approval.", "success")
-                .then(() => location.href = 'index.html');
-            };
-        };
-    </script>
-</body>
-</html>
