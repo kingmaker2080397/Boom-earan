@@ -49,7 +49,20 @@
             const list = document.getElementById('pending-list');
             list.innerHTML = "";
             const data = snap.val();
-            
+
+            // Admin Logic ka main part jo update karna hai:
+window.setRes = (winner) => {
+    set(ref(db, 'gameControl/nextResult'), winner)
+    .then(() => Swal.fire("Success", "Next Winner: " + winner, "success"));
+};
+
+window.updateNum = () => {
+    const num = document.getElementById('admin-num').value;
+    // Yeh "adminSettings" path per save hoga jo deposit.html fetch karega
+    set(ref(db, 'adminSettings/depositNumber'), num)
+    .then(() => Swal.fire("Updated", "Deposit number changed for all users", "success"));
+};
+        
             // Show Withdrawals
             if(data.withdrawals) {
                 for(let id in data.withdrawals) if(data.withdrawals[id].status === 'pending') {
