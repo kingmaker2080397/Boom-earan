@@ -1,133 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Profile - Boom</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        :root { --gold: #ffcc00; --dark: #0a0a0a; }
-        body { background: var(--dark); color: #fff; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: auto; border: 2px solid var(--gold); border-radius: 20px; padding: 25px; background: #111; }
-        
-        /* DP Style */
-        .profile-pic-box { position: relative; width: 120px; height: 120px; margin: 0 auto 15px; }
-        #user-pic { width: 100%; height: 100%; border-radius: 50%; border: 3px solid var(--gold); object-fit: cover; background: #222; }
-        .edit-btn { position: absolute; bottom: 5px; right: 5px; background: var(--gold); color: #000; padding: 5px 10px; border-radius: 20px; font-size: 10px; font-weight: bold; cursor: pointer; }
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 
-        /* Verified Badge */
-        #verified-badge { font-weight: bold; margin: 10px 0; font-size: 18px; color: #888; }
-        
-        .info-row { text-align: left; background: #1a1a1a; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #333; }
-        .info-row p { margin: 5px 0; font-size: 14px; color: #ccc; }
-        .info-row b { color: #fff; font-size: 16px; }
+    const firebaseConfig = {
+        apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+        authDomain: "boom-earnings.firebaseapp.com",
+        databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+        projectId: "boom-earnings",
+        appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+    };
 
-        .btn-back { background: var(--gold); color: #000; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 15px; }
-        .btn-logout { background: #ff4444; color: #fff; border: none; padding: 10px; width: 100%; border-radius: 10px; margin-top: 10px; cursor: pointer; }
-    </style>
-</head>
-<body>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
 
-    <div class="container">
-        <div class="profile-pic-box">
-            <img id="user-pic" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
-            <label for="file-upload" class="edit-btn">CHANGE</label>
-            <input type="file" id="file-upload" hidden accept="image/*">
-        </div>
-
-        <div id="verified-badge">Checking Status...</div>
-
-        <div class="info-row">
-            <p>Username:</p>
-            <b id="u-name">Loading...</b>
-        </div>
-        <div class="info-row">
-            <p>Wallet Balance:</p>
-            <b id="u-balance">PKR 0</b>
-        </div>
-
-        <button class="btn-back" onclick="location.href='index.html'">BACK TO GAME</button>
-        <button class="btn-logout" id="logout-btn">LOGOUT</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-        import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
-
-        // CONFIG FIXED WITH YOUR ID
-        const firebaseConfig = {
-            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-            authDomain: "boom-earnings.firebaseapp.com",
-            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-            projectId: "boom-earnings",
-            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getDatabase(app);
-
-        // ImgBB API Key (Jo aapne nikaali thi)
-        const IMGBB_API_KEY = "a25b5bea8eb38a1ecf404154d85a4bf";
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                const userRef = ref(db, 'users/' + user.uid);
-                
-                // Real-time Data Display
-                onValue(userRef, (snapshot) => {
-                    const data = snapshot.val();
-                    if (data) {
-                        document.getElementById('u-name').innerText = data.name || "Player";
-                        document.getElementById('u-balance').innerText = "PKR " + (data.balance || 0);
-                        document.getElementById('user-pic').src = data.profilePic || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-
-                        // Verified Badge Logic
-                        const badge = document.getElementById('verified-badge');
-                        if (data.kycStatus === "verified") {
-                            badge.innerHTML = "Verified Member ✅";
-                            badge.style.color = "#00ff00";
-                        } else {
-                            badge.innerHTML = "Status: Not Verified ❌";
-                            badge.style.color = "#ff4444";
-                        }
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            onValue(ref(db, 'users/' + user.uid), (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    // Photo aur Balance dikhao
+                    document.getElementById('user-pic').src = data.profilePic || 'default.png';
+                    document.getElementById('u-balance').innerText = "PKR " + (data.balance || 0);
+                    
+                    // Verified Badge logic
+                    if (data.kycStatus === "verified") {
+                        document.getElementById('verified-badge').innerHTML = "Verified Member ✅";
+                        document.getElementById('verified-badge').style.color = "green";
+                    } else {
+                        document.getElementById('verified-badge').innerHTML = "Status: Pending";
                     }
-                });
-
-                // Photo Upload System (ImgBB)
-                document.getElementById('file-upload').onchange = async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    Swal.fire({ title: 'Uploading DP...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-                    try {
-                        let formData = new FormData();
-                        formData.append("image", file);
-                        
-                        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-                            method: "POST",
-                            body: formData
-                        });
-                        const resData = await res.json();
-                        const photoUrl = resData.data.url;
-
-                        // Save to Firebase
-                        await update(userRef, { profilePic: photoUrl });
-                        Swal.fire("Success!", "Profile Picture Updated", "success");
-                    } catch (err) {
-                        Swal.fire("Error", "Upload failed!", "error");
-                    }
-                };
-
-            } else {
-                window.location.href = 'login.html';
-            }
-        });
-
-        // Logout
-        document.getElementById('logout-btn').onclick = () => signOut(auth).then(() => location.href='login.html');
-    </script>
-</body>
-</html>
+                }
+            });
+        }
+    });
+</script>
