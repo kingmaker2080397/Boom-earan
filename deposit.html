@@ -17,24 +17,120 @@
         .info-box p { margin: 5px 0; font-size: 14px; }
         .admin-num { color: var(--gold); font-size: 20px; font-weight: 800; letter-spacing: 1px; }
 
-        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-size: 16px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; font-size: 16px; }
         
-        .upload-area { border: 2px dashed #444; padding: 20px; border-radius: 10px; margin: 15px 0; cursor: pointer; }
-        #preview { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; }
+        .upload-area { border: 2px dashed #444; padding: 20px; border-radius: 10px; margin: 15px 0; cursor: pointer; background: #1a1a1a; }
+        #preview { width: 100%; max-height: 200px; object-fit: contain; margin-top: 10px; display: none; border-radius: 8px; border: 1px solid var(--gold); }
 
-        .btn-submit { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 16px; text-transform: uppercase; }
+        .btn-submit { background: var(--gold); color: #000; font-weight: bold; border: none; padding: 15px; width: 100%; border-radius: 10px; cursor: pointer; font-size: 16px; text-transform: uppercase; margin-top: 10px; transition: 0.3s; }
+        .btn-submit:hover { background: #e6b800; transform: scale(1.02); }
         .btn-back { display: block; margin-top: 15px; color: #888; text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>💰 Deposit Funds</h2>
+        <div style="font-size: 40px; margin-bottom: 10px;">💰</div>
+        <h2>Deposit Funds</h2>
 
         <div class="info-box">
             <p><b>Method:</b> EasyPaisa / JazzCash</p>
             <p><b>Account Name:</b> Boom Admin Official</p>
             <p><b>Send Money To:</b></p>
             <div id="admin-num-display" class="admin-num">Loading...</div>
-            <p style="font-size: 10px; color: #888; margin-top: 5px;">(Admin updates this number automatically)</
-                
+            <p style="font-size: 10px; color: #888; margin-top: 5px;">(Admin se automatic update hota hai)</p>
+        </div>
+
+        <input type="number" id="dep-amount" placeholder="Enter Amount (Min 100)" min="100">
+        <input type="text" id="trx-id" placeholder="Transaction ID (TID) dalo">
+
+        <p style="text-align: left; font-size: 12px; color: #aaa; margin-left: 5px;">Upload Payment Screenshot:</p>
+        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+            <p id="upload-text">📸 Click to Select Image</p>
+            <input type="file" id="file-input" hidden accept="image/*">
+            <center><img id="preview" alt="Screenshot Preview"></center>
+        </div>
+
+        <button class="btn-submit" onclick="submitDeposit()">Submit Request</button>
+        <a href="index.html" class="btn-back">⬅ Back to Game</a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+        import { getDatabase, ref, onValue, set, push } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+
+        // CONFIG (Same as your Admin and Index)
+        const firebaseConfig = {
+            apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+            authDomain: "boom-earnings.firebaseapp.com",
+            databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+            projectId: "boom-earnings",
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        let userUID = null;
+
+        // 1. ADMIN SE NUMBER SYNC KARO
+        onValue(ref(db, 'adminSettings/depositNumber'), (snap) => {
+            const num = snap.val() || "03xx-xxxxxxx"; 
+            document.getElementById('admin-num-display').innerText = num;
+        });
+
+        // 2. USER LOGIN CHECK
+        onAuthStateChanged(auth, (user) => {
+            if (user) { userUID = user.uid; }
+            else { window.location.href = 'login.html'; }
+        });
+
+        // 3. IMAGE PREVIEW (Sain Image upload hogi tabhi to admin dekh payega)
+        document.getElementById('file-input').onchange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = document.getElementById('preview');
+                    img.src = event.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('upload-text').style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+
+        // 4. SUBMIT FUNCTION
+        window.submitDeposit = async () => {
+            const amt = document.getElementById('dep-amount').value;
+            const trx = document.getElementById('trx-id').value;
+            const file = document.getElementById('file-input').files[0];
+
+            if (!amt || amt < 100) return Swal.fire("Oye!", "Kam se kam 100 PKR dalo", "error");
+            if (!trx) return Swal.fire("TID?", "Transaction ID bhool gaye?", "error");
+            if (!file) return Swal.fire("Screenshot!", "Paisa bhejne ka saboot (photo) upload karo", "error");
+
+            Swal.fire({ title: 'Processing...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+
+            try {
+                const newDepRef = push(ref(db, 'deposits'));
+                await set(newDepRef, {
+                    uid: userUID,
+                    amount: parseInt(amt),
+                    trxid: trx,
+                    status: "pending",
+                    timestamp: Date.now()
+                });
+
+                Swal.fire("Zabardast!", "Request chali gayi. Admin check karke balance daal dega.", "success")
+                    .then(() => window.location.href = 'index.html');
+
+            } catch (err) {
+                Swal.fire("Error!", "Network masla hai, dobara try karo.", "error");
+            }
+        };
+    </script>
+</body>
+</html>
