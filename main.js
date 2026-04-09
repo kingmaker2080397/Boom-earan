@@ -2,36 +2,32 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/fireba
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
 import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
-    authDomain: "boom-earnings.firebaseapp.com",
-    databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
-    projectId: "boom-earnings",
-    appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
-};
-
+// Config (Use your original)
+const firebaseConfig = { ... };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 
 let currentBalance = 0;
-let currentUser = null;
 let timeLeft = 15;
 let myBets = [];
 
-// Sound Effects
-const sndBet = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+// Sound Fix
+const sndClick = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
 const sndWin = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
 
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        currentUser = user;
         onValue(ref(db, `users/${user.uid}`), (snap) => {
-            currentBalance = snap.val()?.balance || 0;
+            const data = snap.val();
+            currentBalance = data?.balance || 0;
             document.getElementById('balance').innerText = currentBalance;
+            if(data?.kycVerified) {
+                document.getElementById('v-status').innerHTML = '✅ Verified';
+            }
         });
         startTimer();
-    } else { window.location.href = 'login.html'; }
+    }
 });
 
 function startTimer() {
@@ -41,47 +37,49 @@ function startTimer() {
             timeLeft--;
         } else {
             clearInterval(interval);
-            showResult();
+            processGame();
         }
     }, 1000);
 }
 
-async function showResult() {
-    const status = document.getElementById('status');
+async function processGame() {
     const gameSnap = await get(ref(db, 'gameControl/nextResult'));
     let winner = gameSnap.val() || 'random';
     if(winner === 'random') winner = Math.random() > 0.5 ? 'tiger' : 'dragon';
 
-    // Animation
-    const card = document.getElementById(`card-${winner}`);
-    card.classList.add('flipped');
+    // Flip Card Animation
+    const cardId = winner === 'tiger' ? 'card-tiger' : 'card-dragon';
+    document.getElementById(cardId).classList.add('flipped');
+    document.getElementById(cardId).innerText = Math.floor(Math.random() * 10) + 1;
 
     setTimeout(async () => {
-        status.innerText = `${winner.toUpperCase()} WINS!`;
-        let winnings = 0;
-        myBets.forEach(b => { if(b.side === winner) winnings += b.amount * 2; });
+        let totalWin = 0;
+        myBets.forEach(b => { if(b.side === winner) totalWin += b.amount * 2; });
 
-        if(winnings > 0) {
+        if(totalWin > 0) {
             sndWin.play();
-            await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance + winnings });
-            Swal.fire("Winner!", `+${winnings} PKR added`, "success");
+            await update(ref(db, `users/${auth.currentUser.uid}`), { balance: currentBalance + totalWin });
+            Swal.fire("Winner!", "You Won PKR " + totalWin, "success");
         }
 
+        // Reset
         setTimeout(() => {
-            timeLeft = 15; myBets = [];
-            document.querySelectorAll('.card-inner').forEach(c => c.classList.remove('flipped'));
-            status.innerText = "Betting Open";
+            timeLeft = 15;
+            myBets = [];
+            document.querySelectorAll('.card-box').forEach(c => {
+                c.classList.remove('flipped');
+                c.innerText = "?";
+            });
             startTimer();
-        }, 4000);
-    }, 1000);
+        }, 3000);
+    }, 1500);
 }
 
 window.placeBet = async (side) => {
     const amt = parseInt(document.getElementById('bet-amount').value);
-    if(amt > currentBalance) return Swal.fire("Error", "Insufficient Balance", "error");
-    
-    sndBet.play();
-    myBets.push({ side, amount: amt });
-    await update(ref(db, `users/${currentUser.uid}`), { balance: currentBalance - amt });
+    if(amt > currentBalance) return Swal.fire("Low Balance", "", "error");
+    sndClick.play();
+    myBets.push({side, amount: amt});
+    await update(ref(db, `users/${auth.currentUser.uid}`), { balance: currentBalance - amt });
 };
-    
+        
