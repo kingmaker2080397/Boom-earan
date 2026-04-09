@@ -7,26 +7,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { background: #000; color: #fff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
-        .box { width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; background: #111; border: 1px solid #ffcc00; box-shadow: 0 0 20px rgba(255, 204, 0, 0.2); }
-        h2 { color: #ffcc00; margin-bottom: 25px; }
-        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: #fff; box-sizing: border-box; outline: none; }
-        input:focus { border-color: #ffcc00; }
-        input[type="file"] { padding: 10px; background: #1a1a1a; font-size: 0.9rem; }
-        .btn { width: 100%; padding: 15px; background: #ffcc00; color: #000; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; font-size: 1rem; }
-        .back-link { display: inline-block; margin-top: 20px; color: #777; text-decoration: none; font-size: 0.9rem; }
+        .box { width: 90%; max-width: 400px; padding: 30px; border-radius: 20px; background: #111; border: 1px solid #ffcc00; text-align: center; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: 1px solid #333; background: #222; color: #fff; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: #ffcc00; color: #000; font-weight: bold; border: none; border-radius: 10px; cursor: pointer; margin-top: 15px; }
     </style>
 </head>
 <body>
     <div class="box">
         <h2>🛡️ KYC Verification</h2>
-        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 20px;">Please upload your real ID to enable withdrawals.</p>
-        
         <input type="text" id="full-name" placeholder="Full Name (As per ID)">
-        <label style="display:block; text-align:left; font-size: 0.8rem; color:#ffcc00; margin-left: 5px;">Upload ID Card Image:</label>
         <input type="file" id="file-id" accept="image/*">
-        
         <button class="btn" onclick="submitKYC()">SUBMIT DOCUMENT</button>
-        <a href="profile.html" class="back-link">Cancel and Go Back</a>
+        <br><a href="profile.html" style="color:#777; text-decoration:none; font-size:0.8rem;">Cancel</a>
     </div>
 
     <script type="module">
@@ -41,7 +33,6 @@
             projectId: "boom-earnings",
             appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
@@ -50,31 +41,22 @@
         window.submitKYC = async () => {
             const name = document.getElementById('full-name').value;
             const file = document.getElementById('file-id').files[0];
-            const user = auth.currentUser;
-
-            if (!name || !file) return Swal.fire("Error", "Please fill all fields", "error");
+            if (!name || !file) return Swal.fire("Error", "Fill all fields", "error");
 
             Swal.fire({title: 'Uploading...', allowOutsideClick: false, didOpen: () => Swal.showLoading()});
-
             try {
-                let formData = new FormData();
-                formData.append("image", file);
+                let fd = new FormData(); fd.append("image", file);
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: fd });
+                const d = await res.json();
                 
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: "POST", body: formData });
-                const data = await res.json();
-                
-                await set(ref(db, 'kyc_requests/' + user.uid), {
-                    uid: user.uid,
+                await set(ref(db, 'kyc_requests/' + auth.currentUser.uid), {
+                    uid: auth.currentUser.uid,
                     name: name,
-                    idPhoto: data.data.url,
-                    status: "pending",
-                    timestamp: Date.now()
+                    idPhoto: d.data.url,
+                    status: "pending"
                 });
-                
-                Swal.fire("Success", "KYC Submitted Successfully!", "success").then(() => location.href='profile.html');
-            } catch (err) {
-                Swal.fire("Error", "Upload failed, try again.", "error");
-            }
+                Swal.fire("Success", "KYC Submitted!", "success").then(() => location.href='profile.html');
+            } catch (e) { Swal.fire("Error", "Failed", "error"); }
         };
     </script>
 </body>
