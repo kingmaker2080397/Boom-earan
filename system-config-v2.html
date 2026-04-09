@@ -3,64 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Boom Master Control</title>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <title>Boom Admin Master</title>
     <style>
-        body { background: #000; color: #ffcc00; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .panel { border: 2px solid #ffcc00; border-radius: 15px; padding: 20px; margin-bottom: 25px; background: #111; box-shadow: 0 0 15px rgba(255, 204, 0, 0.2); }
-        h2, h3 { text-align: center; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; font-size: 16px; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; margin-top: 10px; }
+        body { background: #000; color: #fff; font-family: sans-serif; padding: 20px; }
+        .card { background: #1a1a1a; border: 2px solid #ffcc00; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        h2 { color: #ffcc00; text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        input, select { width: 90%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        button { width: 100%; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 5px; border: none; transition: 0.3s; }
         .btn-update { background: #ffcc00; color: #000; }
-        .btn-result { width: 30%; display: inline-block; margin: 5px; }
-        .tiger-win { background: #ff3131; color: #fff; }
-        .dragon-win { background: #007bff; color: #fff; }
-        .random-win { background: #666; color: #fff; }
-        
-        .request-card { background: #222; padding: 15px; border-radius: 10px; margin-top: 15px; border-left: 5px solid #ffcc00; position: relative; }
-        .request-card p { margin: 5px 0; color: #ddd; font-size: 14px; }
-        .approve-btn { background: #28a745; color: #fff; padding: 8px; font-size: 12px; width: auto; margin-right: 10px; }
-        .reject-btn { background: #dc3545; color: #fff; padding: 8px; font-size: 12px; width: auto; }
-        .badge { background: #ffcc00; color: #000; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .btn-dragon { background: #007bff; color: #fff; margin-bottom: 5px; }
+        .btn-tiger { background: #ff4444; color: #fff; margin-bottom: 5px; }
+        .btn-random { background: #666; color: #fff; }
+        .kyc-item { background: #222; padding: 15px; border-radius: 10px; margin-top: 10px; border-left: 5px solid #ffcc00; }
+        .img-container { display: flex; gap: 10px; margin: 10px 0; }
+        .img-container img { width: 48%; border: 1px solid #444; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h2>🚀 Boom Admin Master</h2>
+    <h2>🚀 BOOM ADMIN MASTER</h2>
 
-    <div class="panel">
-        <h3>💰 Update Deposit Details</h3>
+    <div class="card">
+        <h3>💰 UPDATE DEPOSIT DETAILS</h3>
         <label>EasyPaisa/JazzCash Number:</label>
-        <input type="text" id="num-input" placeholder="03442585087">
-        <button class="btn-update" onclick="updateApp()">Update User App</button>
+        <input type="text" id="admin-number" placeholder="Enter Account Number">
+        <button class="btn-update" onclick="updateDepositInfo()">UPDATE USER APP</button>
     </div>
 
-    <div class="panel">
-        <h3>🎮 Game Result Control</h3>
-        <div style="text-align: center;">
-            <button class="btn-result tiger-win" onclick="setResult('tiger')">Tiger Win</button>
-            <button class="btn-result dragon-win" onclick="setResult('dragon')">Dragon Win</button>
-            <button class="btn-result random-win" onclick="setResult('random')">Random</button>
-        </div>
-        <p style="text-align:center; font-size: 12px; color: #888; margin-top: 10px;">Next result will be forced to your choice.</p>
+    <div class="card">
+        <h3>🎮 GAME RESULT CONTROL</h3>
+        <p id="current-mode">Current Mode: Loading...</p>
+        <button class="btn-dragon" onclick="setForceWin('dragon')">DRAGON WIN</button>
+        <button class="btn-tiger" onclick="setForceWin('tiger')">TIGER WIN</button>
+        <button class="btn-random" onclick="setForceWin('random')">RANDOM MODE</button>
+        <p style="font-size: 12px; color: #aaa;">Next result will be forced to your choice.</p>
     </div>
 
-    <div class="panel">
-        <h3>📩 Pending Approvals (Withdrawals & Deposits)</h3>
-        <div id="pending-list">Loading Requests...</div>
+    <div class="card">
+        <h3>📥 PENDING KYC APPROVALS</h3>
+        <div id="kyc-list">Loading Requests...</div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-        // CONFIG: Replace with your original credentials
         const firebaseConfig = {
             apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
             authDomain: "boom-earnings.firebaseapp.com",
             databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
             projectId: "boom-earnings",
-            storageBucket: "boom-earnings.firebasestorage.app",
-            messagingSenderId: "787871998344",
-            appId: "1:787871998344:web:3c2
-        
+            appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // --- 1. Deposit Update ---
+        window.updateDepositInfo = () => {
+            const num = document.getElementById('admin-number').value;
+            if(!num) return alert("Number likhein!");
+            set(ref(db, 'admin_settings/deposit_number'), num)
+            .then(() => alert("Number updated for all users!"));
+        };
+
+        // --- 2. Force Win Logic ---
+        window.setForceWin = (choice) => {
+            set(ref(db, 'game_settings/next_winner'), choice)
+            .then(() => alert("Result Forced: " + choice.toUpperCase()));
+        };
+
+        onValue(ref(db, 'game_settings/next_winner'), (snap) => {
+            document.getElementById('current-mode').innerText = "Current Mode: " + (snap.val() || "random").toUpperCase();
+        });
+
+        // --- 3. KYC Management (Front & Back View) ---
+        onValue(ref(db, 'kyc_submissions'), (snapshot) => {
+            const list = document.getElementById('kyc-list');
+            const data = snapshot.val();
+            if (!data) { list.innerHTML = "No pending requests."; return; }
+
+            let html = "";
+            for (let uid in data) {
+                const kyc = data[uid];
+                html += `
+                    <div class="kyc-item">
+                        <p><strong>User ID:</strong> ${uid}</p>
+                        <div class="img-container">
+                            <img src="${kyc.front_id_url}" onclick="window.open(this.src)" title="Front Side">
+                            <img src="${kyc.back_id_url}" onclick="window.open(this.src)" title="Back Side">
+                        </div>
+                        <button class="btn-update" onclick="approveKYC('${uid}')">APPROVE ✅</button>
+                        <button style="background:#444; margin-top:5px;" onclick="rejectKYC('${uid}')">REJECT ❌</button>
+                    </div>
+                `;
+            }
+            list.innerHTML = html;
+        });
+
+        window.approveKYC = (uid) => {
+            update(ref(db, 'users/' + uid), { kyc_status: 'verified' })
+            .then(() => {
+                remove(ref(db, 'kyc_submissions/' + uid));
+                alert("User Verified!");
+            });
+        };
+
+        window.rejectKYC = (uid) => {
+            remove(ref(db, 'kyc_submissions/' + uid));
+            alert("Request Rejected.");
+        };
+    </script>
+</body>
+</html>
