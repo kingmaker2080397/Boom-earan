@@ -1,85 +1,94 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, runTransaction } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-import { getDatabase, ref, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-database.js";
 
-// Config (Use your original)
-const firebaseConfig = { ... };
+// 1. Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyALm0SnUYjeeh4kJj9QBk4BgaINwnooa3c",
+    authDomain: "boom-earnings.firebaseapp.com",
+    databaseURL: "https://boom-earnings-default-rtdb.firebaseio.com",
+    projectId: "boom-earnings",
+    appId: "1:787871998344:web:3c20aa47e7e51001d01a3d"
+};
+
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-let currentBalance = 0;
-let timeLeft = 15;
-let myBets = [];
+// 2. Sound Effects (Trade lagne par bajenge)
+const betSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
 
-// Sound Fix
-const sndClick = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
-const sndWin = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
-
+// 3. User State & Balance Update
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        onValue(ref(db, `users/${user.uid}`), (snap) => {
+        onValue(ref(db, 'users/' + user.uid), (snap) => {
             const data = snap.val();
-            currentBalance = data?.balance || 0;
-            document.getElementById('balance').innerText = currentBalance;
-            if(data?.kycVerified) {
-                document.getElementById('v-status').innerHTML = '✅ Verified';
+            const balElement = document.getElementById('top-balance');
+            const uBalElement = document.getElementById('u-balance');
+            const uNameElement = document.getElementById('u-name');
+
+            if (data) {
+                if (balElement) balElement.innerText = data.balance || 0;
+                if (uBalElement) uBalElement.innerText = "PKR " + (data.balance || 0);
+                if (uNameElement) uNameElement.innerText = data.name || "Player";
             }
         });
-        startTimer();
     }
 });
 
-function startTimer() {
-    let interval = setInterval(() => {
-        if(timeLeft > 0) {
-            document.getElementById('timer').innerText = timeLeft;
-            timeLeft--;
-        } else {
-            clearInterval(interval);
-            processGame();
+// 4. Trade (Betting) Function
+window.placeBet = (side) => {
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Pehle Login karein!");
+        return;
+    }
+
+    // Amount input se lein ya fix rakhein (Yahan 10 rakha hai)
+    const betAmount = 10; 
+    const userRef = ref(db, 'users/' + user.uid);
+
+    runTransaction(userRef, (currentData) => {
+        if (currentData && (currentData.balance >= betAmount)) {
+            currentData.balance -= betAmount;
+            return currentData;
         }
-    }, 1000);
-}
-
-async function processGame() {
-    const gameSnap = await get(ref(db, 'gameControl/nextResult'));
-    let winner = gameSnap.val() || 'random';
-    if(winner === 'random') winner = Math.random() > 0.5 ? 'tiger' : 'dragon';
-
-    // Flip Card Animation
-    const cardId = winner === 'tiger' ? 'card-tiger' : 'card-dragon';
-    document.getElementById(cardId).classList.add('flipped');
-    document.getElementById(cardId).innerText = Math.floor(Math.random() * 10) + 1;
-
-    setTimeout(async () => {
-        let totalWin = 0;
-        myBets.forEach(b => { if(b.side === winner) totalWin += b.amount * 2; });
-
-        if(totalWin > 0) {
-            sndWin.play();
-            await update(ref(db, `users/${auth.currentUser.uid}`), { balance: currentBalance + totalWin });
-            Swal.fire("Winner!", "You Won PKR " + totalWin, "success");
-        }
-
-        // Reset
-        setTimeout(() => {
-            timeLeft = 15;
-            myBets = [];
-            document.querySelectorAll('.card-box').forEach(c => {
-                c.classList.remove('flipped');
-                c.innerText = "?";
+        return; 
+    }).then((result) => {
+        if (result.committed) {
+            // Sound play karein
+            betSound.play().catch(e => console.log("Sound error"));
+            
+            // Firebase mein bet record save karein
+            const newBetRef = ref(db, 'all_bets/' + Date.now());
+            set(newBetRef, {
+                uid: user.uid,
+                side: side,
+                amount: betAmount,
+                timestamp: Date.now()
             });
-            startTimer();
-        }, 3000);
-    }, 1500);
-}
 
-window.placeBet = async (side) => {
-    const amt = parseInt(document.getElementById('bet-amount').value);
-    if(amt > currentBalance) return Swal.fire("Low Balance", "", "error");
-    sndClick.play();
-    myBets.push({side, amount: amt});
-    await update(ref(db, `users/${auth.currentUser.uid}`), { balance: currentBalance - amt });
+            alert("Trade Successful on " + side.toUpperCase());
+        } else {
+            alert("Insufficient Balance! Please Deposit.");
+        }
+    }).catch((error) => {
+        console.error(error);
+        alert("Connection Error!");
+    });
 };
-        
+
+// 5. Timer System (15 Seconds)
+let timeLeft = 15;
+const timerDisplay = document.getElementById('timer');
+
+if (timerDisplay) {
+    setInterval(() => {
+        timeLeft--;
+        if (timeLeft < 0) {
+            timeLeft = 15; // Reset round
+            // Yahan winner announce karne ka logic aayega
+        }
+        timerDisplay.innerText = `Next Round: 00:${timeLeft < 10 ? '0' + timeLeft : timeLeft}`;
+    }, 1000);
+        }
