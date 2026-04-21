@@ -1,187 +1,211 @@
-<!DOCTYPE html>
+iya features hai<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdrawal - Maker Gold</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>MAKER GOLD - MASTER ADMIN</title>
     <style>
-        :root { --primary: #ef4444; --bg: #070b14; --card: #1e293b; --gold: #fbbf24; }
-        body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--bg); color: white; text-align: center; padding-bottom: 40px; }
-        
-        .header { padding: 25px 20px; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; }
-        .back-btn { text-decoration: none; color: var(--gold); font-size: 24px; }
-
-        .main-card { 
-            background: var(--card); margin: 20px; padding: 25px; border-radius: 25px; 
-            border: 1px solid rgba(239, 68, 68, 0.2); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        
-        .bal-box { background: #0f172a; padding: 20px; border-radius: 20px; margin-bottom: 20px; border-left: 4px solid var(--gold); }
-        .bal-amount { font-size: 32px; color: var(--gold); font-weight: 700; }
-        
-        .input-group { text-align: left; margin-bottom: 15px; }
-        label { font-size: 11px; color: #94a3b8; margin-left: 5px; text-transform: uppercase; }
-
-        input { 
-            width: 100%; padding: 15px; margin-top: 5px; border-radius: 12px; 
-            border: 1px solid #334155; background: #070b14; color: white; 
-            box-sizing: border-box; font-size: 15px; outline: none;
-        }
-
-        .fee-info { 
-            background: rgba(251, 191, 36, 0.05); padding: 12px; border-radius: 12px; 
-            margin: 15px 0; text-align: left; font-size: 13px; color: #cbd5e1;
-        }
-        .fee-info div { display: flex; justify-content: space-between; margin-bottom: 5px; }
-        .payout-amt { color: #22c55e; font-weight: bold; font-size: 16px; }
-
-        .btn-submit { 
-            width: 100%; padding: 18px; background: var(--primary); border: none; 
-            border-radius: 15px; color: white; font-weight: 800; font-size: 16px; 
-            cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
-        }
-        .btn-submit:disabled { background: #475569; box-shadow: none; cursor: not-allowed; }
-
-        .status-badge { font-size: 12px; padding: 5px 15px; border-radius: 20px; margin-bottom: 15px; display: inline-block; }
-        .pending { background: rgba(251, 191, 36, 0.1); color: var(--gold); border: 1px solid var(--gold); }
-        .approved { background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e; }
+        :root { --bg: #070b14; --card: #1e293b; --accent: #fbbf24; --danger: #ef4444; --success: #22c55e; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); color: white; margin: 0; padding: 15px; }
+        .container { max-width: 1200px; margin: auto; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 15px; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid #334155; position: relative; }
+        h2 { color: var(--accent); border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 18px; margin-top: 0; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; background: #070b14; color: white; border: 1px solid #334155; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; margin-top: 5px; transition: 0.3s; }
+        .btn-gold { background: var(--accent); color: black; }
+        .btn-appr { background: var(--success); color: white; }
+        .btn-rejt { background: var(--danger); color: white; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11px; }
+        th, td { padding: 8px; border-bottom: 1px solid #334155; text-align: left; }
+        .status-tag { color: var(--accent); font-size: 10px; font-weight: bold; }
+        .stat-box { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <a href="profile.html" class="back-btn">❮</a>
-        <span>WITHDRAW USDT</span>
-        <div style="width:24px;"></div>
-    </div>
+<div class="container">
+    <h1 style="color:var(--accent); text-align:center;">MASTER CONTROL PANEL</h1>
 
-    <div class="main-card">
-        <div id="kycBadge" class="status-badge pending">Checking KYC Status...</div>
-
-        <div class="bal-box">
-            <div style="font-size: 11px; color: #94a3b8;">AVAILABLE BALANCE</div>
-            <div class="bal-amount" id="displayBal">0.00 USDT</div>
+    <div class="grid">
+        <div class="card" style="border: 2px solid var(--danger);">
+            <h2>🎯 GAME MANIPULATION</h2>
+            <p style="font-size:11px; color:#94a3b8;">Fix next Win Go result here:</p>
+            <select id="gameFix">
+                <option value="none">AUTO MODE (Random)</option>
+                <option value="Big">FORCE BIG</option>
+                <option value="Small">FORCE SMALL</option>
+                <option value="Number 0">FIX NUMBER 0</option>
+                <option value="Number 1">FIX NUMBER 1</option>
+                <option value="Number 5">FIX NUMBER 5</option>
+                <option value="Number 9">FIX NUMBER 9</option>
+            </select>
+            <button class="btn-rejt" onclick="fixGame()">APPLY TRADE CONTROL</button>
+            <div id="fixStatus" class="status-tag" style="margin-top:10px;">MODE: AUTO</div>
         </div>
 
-        <div class="input-group">
-            <label>Amount to Withdraw</label>
-            <input type="number" id="wAmount" placeholder="Min 10 USDT" oninput="calculateFee()">
+        <div class="card" style="border: 2px solid var(--accent);">
+            <h2>📊 MARKET DISTRIBUTION</h2>
+            <div class="stat-box">
+                <span>Total User Assets:</span>
+                <span id="totalVolume" style="color:var(--success); font-weight:bold;">$0.00</span>
+            </div>
+            <div class="stat-box">
+                <span>Total Active Users:</span>
+                <span id="totalUsers" style="color:var(--accent);">0</span>
+            </div>
+            <div style="background:#070b14; height:10px; border-radius:10px; margin-top:15px; overflow:hidden;">
+                <div id="volumeBar" style="width:0%; height:100%; background:var(--accent); transition:1s;"></div>
+            </div>
+            <p style="font-size:10px; color:#94a3b8; margin-top:10px;">*Real-time updates from Firebase</p>
         </div>
 
-        <div class="fee-info">
-            <div><span>Withdrawal Fee (5%):</span> <span id="feeLabel">0.00 USDT</span></div>
-            <div style="border-top: 1px solid #334155; padding-top: 5px; margin-top: 5px;">
-                <span>You will receive:</span> <span class="payout-amt" id="finalPayout">0.00 USDT</span>
+        <div class="card">
+            <h2>💰 USER WALLET EDIT</h2>
+            <input type="text" id="userPhone" placeholder="User Phone Number">
+            <input type="number" id="balanceAmt" placeholder="USDT Amount">
+            <div style="display:flex; gap:10px;">
+                <button class="btn-appr" onclick="updateBalance('add')">ADD</button>
+                <button class="btn-rejt" onclick="updateBalance('sub')">DEDUCT</button>
             </div>
         </div>
-
-        <div class="input-group">
-            <label>Withdrawal Account (Saved in KYC)</label>
-            <input type="text" id="wAccount" readonly>
-        </div>
-
-        <button class="btn-submit" id="withdrawBtn" onclick="submitWithdrawal()" disabled>SUBMIT REQUEST</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, onValue, update, push, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    <div class="grid" style="margin-top:20px;">
+        <div class="card">
+            <h2>💳 DEPOSIT METHOD</h2>
+            <input type="text" id="depName" placeholder="Method (e.g. USDT TRC20)">
+            <input type="text" id="depAddr" placeholder="Wallet Address">
+            <button class="btn-gold" onclick="updateDeposit()">UPDATE DEPOSIT INFO</button>
+        </div>
+    </div>
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyCh-1xi3jkIj5hUsmbm3GFGfT_AlWmxYkk", 
-            databaseURL: "https://maker-trading-official-default-rtdb.firebaseio.com/" 
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const phone = localStorage.getItem("userPhone");
+    <div class="card" style="margin-top:20px;">
+        <h2>📋 KYC REQUESTS</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>Phone</th><th>Name</th><th>ID/Wallet</th><th>Action</th></tr></thead>
+                <tbody id="kycTable"></tbody>
+            </table>
+        </div>
+    </div>
 
-        let currentBalance = 0;
-        let isKycApproved = false;
-        const FEE_PERCENT = 5; // 5% Fee
+    <div class="card" style="margin-top:20px;">
+        <h2>🏧 WITHDRAWALS (5% FEE)</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead><tr><th>User</th><th>Amount</th><th>Final Pay</th><th>Address</th><th>Action</th></tr></thead>
+                <tbody id="withdrawTable"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-        if (!phone) window.location.href = 'login.html';
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, update, onValue, remove, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // 1. Fetch User Data (Balance & KYC)
-        onValue(ref(db, 'users/' + phone), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                currentBalance = data.wallet || 0;
-                document.getElementById('displayBal').innerText = currentBalance.toFixed(2) + " USDT";
-                document.getElementById('wAccount').value = data.idNumber || "No Address Saved";
-                
-                const badge = document.getElementById('kycBadge');
-                if(data.kycStatus === "Approved") {
-                    badge.innerText = "Verified Account ✅";
-                    badge.className = "status-badge approved";
-                    isKycApproved = true;
-                    document.getElementById('withdrawBtn').disabled = false;
-                } else {
-                    badge.innerText = "KYC Pending/Required ⚠️";
-                    badge.className = "status-badge pending";
-                }
-            }
+    const firebaseConfig = { 
+        apiKey: "AIzaSyCh-1xi3jkIj5hUsmbm3GFGfT_AlWmxYkk", 
+        databaseURL: "https://maker-trading-official-default-rtdb.firebaseio.com/" 
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // --- INVESTMENT DISTRIBUTION LOGIC ---
+    onValue(ref(db, 'users'), (snap) => {
+        let total = 0;
+        let count = 0;
+        snap.forEach(child => {
+            const u = child.val();
+            if(u.wallet) total += parseFloat(u.wallet);
+            count++;
         });
+        document.getElementById('totalVolume').innerText = "$" + total.toFixed(2);
+        document.getElementById('totalUsers').innerText = count;
+        
+        // Progress bar (assuming 50,000 as a milestone)
+        let progress = (total / 50000) * 100;
+        document.getElementById('volumeBar').style.width = Math.min(progress, 100) + "%";
+    });
 
-        // 2. Fee Calculation Logic
-        window.calculateFee = () => {
-            const amt = parseFloat(document.getElementById('wAmount').value) || 0;
-            const fee = (amt * FEE_PERCENT) / 100;
-            const final = amt - fee;
+    // --- GAME FIX LOGIC ---
+    window.fixGame = () => {
+        const val = document.getElementById('gameFix').value;
+        if(val === "none") {
+            remove(ref(db, 'game_control/next_fix'));
+            document.getElementById('fixStatus').innerText = "MODE: AUTO";
+        } else {
+            set(ref(db, 'game_control/next_fix'), val);
+            document.getElementById('fixStatus').innerText = "MODE: MANUAL (" + val + ")";
+        }
+        alert("Trade Control Applied!");
+    };
 
-            document.getElementById('feeLabel').innerText = fee.toFixed(2) + " USDT";
-            document.getElementById('finalPayout').innerText = (final > 0 ? final.toFixed(2) : "0.00") + " USDT";
-        };
+    // --- DEPOSIT LOGIC ---
+    window.updateDeposit = () => {
+        const name = document.getElementById('depName').value;
+        const addr = document.getElementById('depAddr').value;
+        set(ref(db, 'admin_settings/deposit'), { method: name, address: addr });
+        alert("Deposit Settings Updated!");
+    };
 
-        // 3. Submit Withdrawal to Admin
-        window.submitWithdrawal = async () => {
-            const amt = parseFloat(document.getElementById('wAmount').value);
-            const btn = document.getElementById('withdrawBtn');
+    // --- WALLET LOGIC ---
+    window.updateBalance = async (type) => {
+        const ph = document.getElementById('userPhone').value;
+        const amt = parseFloat(document.getElementById('balanceAmt').value);
+        if(!ph || !amt) return alert("Fill all fields!");
+        
+        const userRef = ref(db, 'users/' + ph);
+        const snap = await get(userRef);
+        if(snap.exists()){
+            let currentBal = snap.val().wallet || 0;
+            let newBal = type === 'add' ? currentBal + amt : currentBal - amt;
+            update(userRef, { wallet: newBal });
+            alert("New Balance: " + newBal);
+        } else { alert("User Not Found!"); }
+    };
 
-            if (!isKycApproved) return alert("Your KYC is not approved yet!");
-            if (amt < 10) return alert("Minimum withdrawal is 10 USDT");
-            if (amt > currentBalance) return alert("Insufficient Balance!");
+    // --- KYC DATA ---
+    onValue(ref(db, 'kyc_requests'), (snap) => {
+        const table = document.getElementById('kycTable');
+        table.innerHTML = "";
+        snap.forEach(child => {
+            const d = child.val();
+            table.innerHTML += `<tr><td>${d.phone}</td><td>${d.name}</td><td>${d.idNumber}</td>
+                <td><button class="btn-appr" onclick="manageKYC('${d.phone}', 'Approved')">Approve</button>
+                <button class="btn-rejt" onclick="manageKYC('${d.phone}', 'Rejected')">Reject</button></td></tr>`;
+        });
+    });
+    window.manageKYC = (ph, status) => {
+        update(ref(db, 'users/' + ph), { kycStatus: status });
+        remove(ref(db, 'kyc_requests/' + ph));
+        alert("KYC " + status);
+    };
 
-            btn.disabled = true;
-            btn.innerText = "Processing...";
-
-            try {
-                // Deduct Balance
-                const newBal = currentBalance - amt;
-                await update(ref(db, 'users/' + phone), { wallet: newBal });
-
-                // Push to Withdrawal Requests (Admin will see this)
-                const withdrawData = {
-                    phone: phone,
-                    requestedAmount: amt,
-                    fee: (amt * FEE_PERCENT) / 100,
-                    finalPayout: amt - ((amt * FEE_PERCENT) / 100),
-                    address: document.getElementById('wAccount').value,
-                    status: "Pending",
-                    timestamp: Date.now(),
-                    date: new Date().toLocaleString()
-                };
-
-                const newRef = push(ref(db, 'withdraw_requests'));
-                await set(newRef, withdrawData);
-
-                // Add to History
-                await push(ref(db, 'user_history/' + phone), {
-                    type: "Withdrawal",
-                    amount: amt,
-                    status: "LOSS",
-                    time: Date.now()
-                });
-
-                alert("Withdrawal Request Sent! Admin will process it within 24h.");
-                window.location.href = "profile.html";
-
-            } catch (error) {
-                alert("Something went wrong!");
-                btn.disabled = false;
-                btn.innerText = "SUBMIT REQUEST";
+    // --- WITHDRAW DATA ---
+    onValue(ref(db, 'withdraw_requests'), (snap) => {
+        const table = document.getElementById('withdrawTable');
+        table.innerHTML = "";
+        snap.forEach(child => {
+            const d = child.val();
+            table.innerHTML += `<tr><td>${d.phone}</td><td>${d.requestedAmount}</td><td>${d.finalPayout}</td><td>${d.address}</td>
+                <td><button class="btn-appr" onclick="finishWithdraw('${child.key}', 'Paid')">Paid</button>
+                <button class="btn-rejt" onclick="finishWithdraw('${child.key}', 'Rejected', '${d.phone}', ${d.requestedAmount})">Reject</button></td></tr>`;
+        });
+    });
+    window.finishWithdraw = async (id, status, ph, amt) => {
+        if(status === 'Rejected') {
+            const uRef = ref(db, 'users/' + ph);
+            const s = await get(uRef);
+            if(s.exists()) {
+                update(uRef, { wallet: (s.val().wallet || 0) + amt });
             }
-        };
-    </script>
+        }
+        remove(ref(db, 'withdraw_requests/' + id));
+        alert("Withdrawal " + status);
+    };
+</script>
 </body>
-</html>
+    </html>
+                    
